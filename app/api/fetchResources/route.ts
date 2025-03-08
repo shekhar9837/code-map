@@ -6,11 +6,13 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY!);
 
 const createLearningPathPrompt = (topic: string) => `
 # Learning Path: ${topic}
+Before starting, Search on the internet for the best resources to learn about ${topic}.
+
 
 For each milestone below, provide:
-1. 2-3 curated YouTube video tutorials (with creator names) with video links
-2. 2-3 high-quality blog articles from Medium/Dev.to/HashNode (with authors) with article links
-3. 1-2 GitHub repositories with practical projects/examples (with repository links)
+1. 2-3 curated YouTube video  (with creator names) with video links
+2. 2-3 high-quality blog articles from Medium/Dev.to/HashNode or any other platform (with authors) with article links
+3. 1-2 GitHub repositories if it is related to code with practical projects/examples (with repository links)
 4. Estimated time to complete each milestone (in hours)
 5. Key concepts to master before moving forward to the next milestone
 
@@ -19,6 +21,8 @@ Please organize content from beginner to advanced level, ensuring:
 - Content is practical and hands-on focused (not just theoretical) 
 - Resources are from reputable creators/authors with good reviews
 - Clear progression between concepts and milestones
+- Double check for any broken links or outdated resources
+
 
 Format the response in markdown with clear headings and bullet points.`;
 

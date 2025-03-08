@@ -3,6 +3,10 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -150,29 +154,32 @@ export default function Dashboard() {
 
   function formatResourcesAsMarkdown(jsonString: string) {
     try {
-      const data = JSON.parse(jsonString);
-      let markdown = "# Learning Roadmap\n\n";
+      let markdown = jsonString;
+      const { youtubeLinks, githubLinks } = extractLinks(jsonString);
 
-      data.roadmap.forEach((item: any, index: number) => {
-        markdown += `## ${index + 1}. ${item.topic}\n\n`;
-        markdown += `### 📺 YouTube Playlist\n${item.youtube_playlist}\n\n`;
+      let formattedContent = `
+# ✨ Learning Path for ${topic}
 
-        markdown += `### 📝 Blog Articles\n`;
-        item.blog_articles.forEach((article: string) => {
-          markdown += `- ${article}\n`;
-        });
-        markdown += "\n";
+> 🎯 **Resource Summary:** ${youtubeLinks.length} Videos · ${
+        githubLinks.length
+      } Repositories
 
-        markdown += `### 💻 GitHub Repositories\n`;
-        item.github_repositories.forEach((repo: string) => {
-          markdown += `- ${repo}\n`;
-        });
-        markdown += "\n---\n\n";
-      });
 
-      return markdown;
+
+${
+  markdown
+  // .replace(/\*\*/g, "✨**")
+  // .replace(/^#\s/gm, "# 🎯 ")
+  // .replace(/^##\s/gm, "## 📌 ")
+  // .replace(/^###\s/gm, "### 🔍 ")
+  // .replace(/\*(.*?)\*/g, "🔸 *$1*")
+}
+`;
+
+      return formattedContent;
     } catch (e) {
-      return jsonString; // Return original string if parsing fails
+      console.error("Error formatting content:", e);
+      return jsonString;
     }
   }
 
@@ -317,17 +324,39 @@ export default function Dashboard() {
                     >
                       Formatted View
                     </TabsTrigger>
-                    <TabsTrigger
+                    {/* <TabsTrigger
                       value="markdown"
                       className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
                     >
                       Markdown
-                    </TabsTrigger>
+                    </TabsTrigger> */}
                   </TabsList>
                 </div>
                 <TabsContent value="formatted" className="m-0">
                   <div className="p-6 prose max-w-none dark:prose-invert">
-                    <ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeHighlight]}
+                      components={{
+                        code({ node, inline, className, children, ...props }) {
+                          const match = /language-(\w+)/.exec(className || "");
+                          return !inline && match ? (
+                            <SyntaxHighlighter
+                              style={vscDarkPlus}
+                              language={match[1]}
+                              PreTag="div"
+                              {...props}
+                            >
+                              {String(children).replace(/\n$/, "")}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
                       {formatResourcesAsMarkdown(resources)}
                     </ReactMarkdown>
                   </div>
