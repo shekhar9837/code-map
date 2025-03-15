@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Github, LogOut, Search, Youtube } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import RoadmapView from '@/components/ui/roadmap-view';
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
@@ -35,10 +36,22 @@ export default function Dashboard() {
     "TypeScript",
     "Next.js",
   ]);
-  console.log("resources", resources);
-  const { youtubeLinks, githubLinks } = extractLinks(resources);
-  console.log("youtubeLinks", youtubeLinks);
-  console.log("githubLinks", githubLinks);
+  // // console.log("resources", resources);
+  // const { youtubeLinks, githubLinks } = extractLinks(resources);
+  // console.log("youtubeLinks", youtubeLinks);
+  // console.log("githubLinks", githubLinks);
+
+  const [youtubeLinks, setYoutubeLinks] = useState<{url: string; thumbnail: string}[]>([]);
+  const [githubLinks, setGithubLinks] = useState<{url: string; thumbnail: string}[]>([]);
+
+  useEffect(() => {
+    async function processLinks() {
+      const { youtubeLinks: yl, githubLinks: gl } = await extractLinks(resources);
+      setYoutubeLinks(yl);
+      setGithubLinks(gl);
+    }
+    processLinks();
+  }, [resources]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -83,44 +96,46 @@ export default function Dashboard() {
     }
   }
 
-  function extractLinks(jsonString: string) {
+  async function extractLinks(jsonString: string) {
     try {
       if (!jsonString) {
         console.log("Empty jsonString received");
         return { youtubeLinks: [], githubLinks: [] };
       }
-
+  
       console.log("Processing raw string:", jsonString);
-
-      // Split the string into lines and process only YouTube and GitHub links
+  
       const lines = jsonString.split("\n");
       const youtubeLinks: { url: string; thumbnail: string }[] = [];
       const githubLinks: { url: string; thumbnail: string }[] = [];
-
-      lines.forEach((line) => {
+  
+      // Process each line
+      for (const line of lines) {
         // Extract YouTube links
         const youtubeMatch = line.match(
           /\[.*?\]\((https:\/\/(?:www\.)?youtube\.com\/.*?)\)/
         );
         if (youtubeMatch) {
           const url = youtubeMatch[1];
-          const thumbnail = getYouTubeThumbnail(url);
+          const thumbnail = await getYouTubeThumbnail(url);
           if (thumbnail) {
             youtubeLinks.push({ url, thumbnail });
           }
         }
-
+  
         // Extract GitHub links
         const githubMatch = line.match(
           /\[.*?\]\((https:\/\/github\.com\/.*?)\)/
         );
         if (githubMatch) {
           const url = githubMatch[1];
-          const thumbnail = getGitHubThumbnail(url);
-          githubLinks.push({ url, thumbnail });
+          const thumbnail = await getGitHubThumbnail(url);
+          if (thumbnail) {
+            githubLinks.push({ url, thumbnail });
+          }
         }
-      });
-
+      }
+  
       console.log("Extracted links:", { youtubeLinks, githubLinks });
       return { youtubeLinks, githubLinks };
     } catch (e) {
@@ -128,34 +143,143 @@ export default function Dashboard() {
       return { youtubeLinks: [], githubLinks: [] };
     }
   }
-
-  function getYouTubeThumbnail(url: string) {
+  
+  async function getYouTubeThumbnail(url: string) {
     try {
-      const videoIdMatch = url.match(
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/
-      );
-      if (!videoIdMatch) return null;
-      return `https://img.youtube.com/vi/${videoIdMatch[1]}/hqdefault.jpg`;
-    } catch (e) {
-      console.error("Error getting YouTube thumbnail:", e);
-      return null;
-    }
-  }
+        if (!url) {
+            console.log("No URL provided");
+            return null;
+        }
 
-  function getGitHubThumbnail(url: string) {
-    try {
-      const repoPath = url.replace("https://github.com/", "");
-      return `https://opengraph.githubassets.com/1/${repoPath}`;
+        const videoIdMatch = url.match(
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/
+        );
+        if (!videoIdMatch) {
+            console.log("Invalid YouTube URL format:", url);
+            return null;
+        }
+
+        const videoId = videoIdMatch[1];
+        const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+        const response = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${apiKey}`
+        );
+
+        if (!response.ok) {
+            console.log("Failed to fetch video data:", url);
+            return null;
+        }
+
+        const data = await response.json();
+        if (!data.items || data.items.length === 0) {
+            console.log("Video not found or unavailable:", url);
+            return null;
+        }
+
+        const video = data.items[0];
+        const publishedAt = new Date(video.snippet.publishedAt);
+        const viewCount = parseInt(video.statistics.viewCount);
+        const likeCount = parseInt(video.statistics.likeCount);
+
+        // Validate video criteria
+        const isRecent = (new Date().getTime() - publishedAt.getTime()) < (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
+        const hasEnoughViews = viewCount > 10000;
+        const hasGoodEngagement = likeCount > 100;
+
+        if (!isRecent || !hasEnoughViews || !hasGoodEngagement) {
+            console.log("Video doesn't meet quality criteria:", url);
+            return null;
+        }
+
+        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     } catch (e) {
-      console.error("Error getting GitHub thumbnail:", e);
-      return null;
+        console.error("Error getting YouTube thumbnail:", e);
+        return null;
     }
+}
+
+  async function getGitHubThumbnail(url: string) {
+    try {
+        const repoPath = url.replace("https://github.com/", "");
+        if (!repoPath || repoPath === url) {
+            console.log("Invalid GitHub URL format:", url);
+            return null;
+        }
+
+        const [owner, repo] = repoPath.split("/");
+        const githubToken = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
+        
+        const response = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}`,
+            {
+                headers: githubToken ? {
+                    Authorization: `token ${githubToken}`
+                } : {}
+            }
+        );
+
+        if (!response.ok) {
+            console.log("Failed to fetch repository data:", url);
+            return null;
+        }
+
+        const data = await response.json();
+        const lastUpdate = new Date(data.updated_at);
+        const isRecent = (new Date().getTime() - lastUpdate.getTime()) < (180 * 24 * 60 * 60 * 1000); // 6 months
+        const hasEnoughStars = data.stargazers_count >= 500;
+        const isNotArchived = !data.archived;
+
+        if (!isRecent || !hasEnoughStars || !isNotArchived) {
+            console.log("Repository doesn't meet quality criteria:", url);
+            return null;
+        }
+
+        return `https://opengraph.githubassets.com/1/${repoPath}`;
+    } catch (e) {
+        console.error("Error getting GitHub thumbnail:", e);
+        return null;
+    }
+}
+
+  async function isValidURL(url: string) {
+  try {
+    if (!url) {
+      console.error('No URL provided');
+      return false;
+    }
+
+    const response = await fetch('/api/validateUrl', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ url })
+    });
+
+    if (!response.ok) {
+      console.error('API response not ok:', response.status);
+      return false;
+    }
+
+    const data = await response.json();
+    
+    if (!data) {
+      console.error('No data received from API');
+      return false;
+    }
+
+    return data.isValid === true;
+
+  } catch (error) {
+    console.error('Error checking URL validity:', error);
+    return false;
   }
+}
 
   function formatResourcesAsMarkdown(jsonString: string) {
     try {
       let markdown = jsonString;
-      const { youtubeLinks, githubLinks } = extractLinks(jsonString);
+      // const { youtubeLinks, githubLinks } = extractLinks(jsonString);
 
       let formattedContent = `
 # ✨ Learning Path for ${topic}
@@ -272,66 +396,96 @@ ${
             </Card>
 
             <div className="space-y-6">
-              <h2 className="text-lg font-bold">YouTube Playlists</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {youtubeLinks.map(
-                  ({ url, thumbnail }) =>
-                    thumbnail && (
-                      <a
-                        key={url}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block"
-                      >
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <Youtube className="h-5 w-5 text-red-500" />
+                Video Tutorials
+                {isLoading && <span className="text-sm text-muted-foreground ml-2">(Loading...)</span>}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {isLoading ? (
+                  Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-40 w-full rounded-lg" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  ))
+                ) : youtubeLinks.length > 0 ? (
+                  youtubeLinks.map(({ url, thumbnail }) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block space-y-2 transition-transform hover:scale-105"
+                    >
+                      <div className="relative overflow-hidden rounded-lg">
                         <img
                           src={thumbnail}
-                          alt="YouTube Thumbnail"
-                          className="rounded-lg shadow-md"
+                          alt="Video Thumbnail"
+                          className="w-full object-cover transition-transform group-hover:scale-110"
+                          style={{ aspectRatio: '16/9' }}
                         />
-                      </a>
-                    )
+                        <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">{url.split('watch?v=')[1]}</p>
+                    </a>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground col-span-3 text-center py-8">
+                    No video tutorials found. Try searching for a different topic.
+                  </p>
                 )}
               </div>
 
-              <h2 className="text-lg font-bold">GitHub Repositories</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {githubLinks.map(({ url, thumbnail }) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
-                  >
-                    <img
-                      src={thumbnail}
-                      alt="GitHub Thumbnail"
-                      className="rounded-lg shadow-md"
-                    />
-                  </a>
-                ))}
+              <h2 className="text-lg font-bold flex items-center gap-2 mt-8">
+                <Github className="h-5 w-5 text-purple-500" />
+                GitHub Repositories
+                {isLoading && <span className="text-sm text-muted-foreground ml-2">(Loading...)</span>}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {isLoading ? (
+                  Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-40 w-full rounded-lg" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  ))
+                ) : githubLinks.length > 0 ? (
+                  githubLinks.map(({ url, thumbnail }) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block space-y-2 transition-transform hover:scale-105"
+                    >
+                      <div className="relative overflow-hidden rounded-lg shadow-md">
+                        <img
+                          src={thumbnail}
+                          alt="Repository Preview"
+                          className="w-full object-cover transition-transform group-hover:scale-110"
+                          style={{ aspectRatio: '16/9' }}
+                        />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">{url.split('github.com/')[1]}</p>
+                    </a>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground col-span-3 text-center py-8">
+                    No GitHub repositories found. Try searching for a different topic.
+                  </p>
+                )}
               </div>
             </div>
 
             <Card className="overflow-hidden">
-              <Tabs defaultValue="formatted">
-                <div className="border-b px-4">
-                  <TabsList className="w-full justify-start rounded-none border-b-0 p-0">
-                    <TabsTrigger
-                      value="formatted"
-                      className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
-                    >
-                      Formatted View
-                    </TabsTrigger>
-                    {/* <TabsTrigger
-                      value="markdown"
-                      className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
-                    >
-                      Markdown
-                    </TabsTrigger> */}
-                  </TabsList>
-                </div>
+              <Tabs defaultValue="formatted" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="formatted">Formatted</TabsTrigger>
+                  <TabsTrigger value="markdown">Markdown</TabsTrigger>
+                  <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+                </TabsList>
                 <TabsContent value="formatted" className="m-0">
                   <div className="p-6 prose max-w-none dark:prose-invert">
                     <ReactMarkdown
@@ -365,6 +519,11 @@ ${
                   <pre className="p-6 overflow-auto bg-muted/50 text-sm">
                     {formatResourcesAsMarkdown(resources)}
                   </pre>
+                </TabsContent>
+                <TabsContent value="roadmap" className="m-0">
+                  <div className="p-6">
+                    <RoadmapView content={formatResourcesAsMarkdown(resources)} />
+                  </div>
                 </TabsContent>
               </Tabs>
             </Card>
