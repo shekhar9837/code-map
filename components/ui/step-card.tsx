@@ -37,7 +37,7 @@ function parseMarkdownLink(text: string) {
         href={match[2]}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-primary hover:underline"
+        className="text-blue-600 hover:underline"
       >
         {match[1]}
       </a>
@@ -81,7 +81,7 @@ export function StepCard({ id, title, duration, description, subSteps }: StepCar
           <ul className="space-y-3">
             {subSteps.map((step, index) => (
               <li key={index} className="flex gap-2 items-start">
-                <span className="text-primary mt-1">
+                <span className="text-primary mt-1 text-blue-500">
                   {step.startsWith('Resource:') ? '📚' : '✨'}
                 </span>
                 <div className="flex-1">

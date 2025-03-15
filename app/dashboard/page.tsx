@@ -78,32 +78,40 @@ export default function Dashboard() {
   async function fetchResources(topic: string) {
     setIsLoading(true);
     setResources("");
-    console.log("topic", topic);
+  
     try {
       const response = await axios.post("/api/fetchResources", { topic });
-      console.log("response", response.data);
       
-      // Validate response data
-      if (response.data && Array.isArray(response.data.steps)) {
-        // Type check and transform the response data
-        const typedSteps: Step[] = response.data.steps.map((step: any) => ({
-          id: String(step.id),
-          title: String(step.title),
-          duration: String(step.duration),
-          description: String(step.description),
-          subSteps: Array.isArray(step.subSteps) ? step.subSteps.map(String) : []
-        }));
+      // Extract the JSON string from the markdown code block
+      const jsonMatch = response.data.match(/```json\n([\s\S]*?)\n```/);
+      
+      if (jsonMatch && jsonMatch[1]) {
+        // Parse the JSON string
+        const parsedData = JSON.parse(jsonMatch[1]);
+        
+        if (parsedData && Array.isArray(parsedData.steps)) {
+          // Type check and transform the response data
+          const typedSteps: Step[] = parsedData.steps.map((step: any) => ({
+            id: String(step.id),
+            title: String(step.title),
+            duration: String(step.duration),
+            description: String(step.description),
+            subSteps: Array.isArray(step.subSteps) ? step.subSteps.map(String) : []
+          }));
   
-        // Set resources with properly typed data
-        setResources({ steps: typedSteps });
+          // Set resources with properly typed data
+          setResources({ steps: typedSteps });
   
-        // Update recent topics
-        setRecentTopics(prev => {
-          const newTopics = [topic, ...prev.filter(t => t !== topic)].slice(0, 5);
-          return newTopics;
-        });
+          // Update recent topics
+          setRecentTopics(prev => {
+            const newTopics = [topic, ...prev.filter(t => t !== topic)].slice(0, 5);
+            return newTopics;
+          });
+        } else {
+          throw new Error("Invalid data structure in response");
+        }
       } else {
-        throw new Error("Invalid response format");
+        throw new Error("Could not extract JSON from response");
       }
     } catch (error) {
       console.error("Error fetching resources:", error);
@@ -370,6 +378,7 @@ function formatResourcesAsMarkdown(data: RoadmapData | string): string {
             <div className="hidden md:flex">
               <p className="text-sm text-muted-foreground">
                 Signed in as {user?.user_metadata.full_name}
+                {/* Signed in as {user?.user_metadata.email} */}
               </p>
             </div>
             <Avatar className="h-8 w-8 border">
