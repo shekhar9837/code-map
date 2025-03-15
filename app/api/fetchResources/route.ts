@@ -5,42 +5,31 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY!);
 
 const createLearningPathPrompt = (topic: string) => `
-# Learning Path: ${topic}
-Before starting, Search on the internet for the best resources to learn about ${topic}.
+Create a practical learning path for ${topic} with 4-6 steps. For each step include:
 
-For each milestone below, provide:
-1. 2-3 curated YouTube videos (with creator names) that meet these criteria:
-   - Video links from established educational channels
-   - Videos with high view counts (>10,000 views)
-   - Published within the last 2 years
-   - High like-to-dislike ratio
-   - Active comment section with positive feedback
+1. A clear title
+2. Duration in hours (single number followed by the word "hours", e.g., "4 hours", "10 hours")
+3. Brief description
+4. 2-3 learning resources with markdown links formatted as: "Resource: [Title](URL) - Brief description"
+5. 1-2 practice exercises formatted as: "Practice exercise: Description"
 
-2. 2-3 high-quality blog articles that meet these criteria:
-   - From reputable platforms (Medium/Dev.to/HashNode)
-   - Written by recognized authors in the field
-   - Published within the last 2 years
-   - High engagement (claps/reactions/comments)
-   - Comprehensive coverage with practical examples
+Return as JSON:
+{
+  "steps": [
+    {
+      "id": "1",
+      "title": "Step title",
+      "duration": "X hours",
+      "description": "What will be learned",
+      "subSteps": [
+        "Resource: [Title](URL) - Description",
+        "Practice exercise: Description"
+      ]
+    }
+  ]
+}
 
-3. 1-2 GitHub repositories that meet these criteria:
-   - Active maintenance (updated within last 6 months)
-   - Significant stars (>500)
-   - Clear documentation and examples
-   - Active issue resolution
-   - Good code quality and test coverage
-
-4. Estimated time to complete each milestone (in hours)
-5. Key concepts to master before moving forward
-
-Please organize content from beginner to advanced level, ensuring:
-- Each resource is thoroughly vetted for quality and relevance
-- Content focuses on practical implementation and best practices
-- Resources come from recognized experts in the field
-- Clear progression between concepts and milestones
-- All links are validated and resources are currently available
-
-Format the response in markdown with clear headings and bullet points.`;
+Make it practical and achievable.`;
 
 interface DuckDuckGoResponse {
   AbstractText: string;
@@ -55,7 +44,7 @@ interface DuckDuckGoResponse {
 async function searchDuckDuckGo(query: string): Promise<string[]> {
   try {
     const response = await fetch(
-      `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&pretty=1&no_html=1&skip_disambig=1&t=code-map&kl=wt-wt&kd=-1`
+      `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&no_redirect=1`
     );
     
     if (!response.ok) {
@@ -64,21 +53,11 @@ async function searchDuckDuckGo(query: string): Promise<string[]> {
 
     const data: DuckDuckGoResponse = await response.json();
     
-    // Extract URLs from Results array with validation
-    const resultUrls = data.Results?.map(r => r.FirstURL).filter(url => url && url.startsWith('http')) || [];
-    
-    // Extract URLs from RelatedTopics array with validation
-    const topicUrls = data.RelatedTopics?.filter(t => t.FirstURL && t.FirstURL.startsWith('http'))
-      .map(t => t.FirstURL as string) || [];
-    
-    // Combine and ensure unique URLs
-    const urls = Array.from(new Set([...resultUrls, ...topicUrls]));
-    
-    // Log the found URLs for debugging
-    console.log(`Found ${urls.length} URLs for query: ${query}`);
-    if (urls.length > 0) {
-      console.log('Sample URLs:', urls.slice(0, 2));
-    }
+    // Collect URLs from multiple sources in the API response
+    const urls = [
+      ...((data.Results || []).map(r => r.FirstURL) || []),
+      ...((data.RelatedTopics || []).map(t => t.FirstURL).filter(Boolean) || [])
+    ].filter((url): url is string => url !== undefined);
 
     return urls;
   } catch (error) {
@@ -96,9 +75,9 @@ export async function POST(req: Request) {
 
     // Fetch real-world resources using DuckDuckGo Search with better error handling
     const [youtubeUrls, githubUrls, blogUrls] = await Promise.all([
-      searchDuckDuckGo(`youtube videos ${topic} site:youtube.com tutorial`),
-      searchDuckDuckGo(`github repo for practice${topic} site:github.com`),
-      searchDuckDuckGo(`medium blogs for ${topic} (site:medium.com OR site:dev.to OR site:hashnode.com)`)
+      searchDuckDuckGo(`${topic} site:youtube.com tutorial`),
+      searchDuckDuckGo(`${topic} site:github.com`),
+      searchDuckDuckGo(`${topic} (site:medium.com OR site:dev.to OR site:hashnode.com)`)
     ]);
 
     const resources = {
@@ -115,11 +94,7 @@ export async function POST(req: Request) {
       (resources.github.length ? '\nGitHub Repositories:\n' + resources.github.join('\n') : '') +
       (resources.blogs.length ? '\nBlog Articles:\n' + resources.blogs.join('\n') : '');
 
-    const model = genAI.getGenerativeModel({
-       model: "gemini-2.0-pro-exp-02-05",
-       systemInstruction: "You are an expert learning path curator with deep knowledge of educational resources. Your role is to analyze topics, break them down into logical milestones, and provide carefully vetted, high-quality learning resources. You excel at creating structured learning paths that progress from fundamentals to advanced concepts, always prioritizing reputable sources, practical examples, and modern, relevant content. You validate all resources for accuracy and accessibility before recommending them.",
-
-       });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const result = await model.generateContentStream(enhancedPrompt);
 
     // Create a readable stream from the Gemini response

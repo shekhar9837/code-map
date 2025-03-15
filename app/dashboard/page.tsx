@@ -1,10 +1,23 @@
 "use client";
 
+// Move interfaces to top level
+interface Step {
+  id: string;
+  title: string;
+  duration: string;
+  description: string;
+  subSteps: string[];
+}
+
+interface RoadmapData {
+  steps: Step[];
+}
+
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import rehypeHighlight from "rehype-highlight";
-import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { Button } from "@/components/ui/button";
@@ -24,11 +37,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Github, LogOut, Search, Youtube } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import RoadmapView from '@/components/ui/roadmap-view';
+import axios from 'axios'
+import { StepCard } from '@/components/ui/step-card';
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
-  const [topic, setTopic] = useState("React");
-  const [resources, setResources] = useState("");
+  const [topic, setTopic] = useState("");
+  // const [resources, setResources] = useState<any>("");
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClientComponentClient();
   const [recentTopics, setRecentTopics] = useState<string[]>([
@@ -36,10 +51,11 @@ export default function Dashboard() {
     "TypeScript",
     "Next.js",
   ]);
-  // // console.log("resources", resources);
-  // const { youtubeLinks, githubLinks } = extractLinks(resources);
-  // console.log("youtubeLinks", youtubeLinks);
-  // console.log("githubLinks", githubLinks);
+
+  
+  const [resources, setResources] = useState<RoadmapData | string>("");
+  console.log("resources", resources);
+  console.log("topic", topic);
 
   const [youtubeLinks, setYoutubeLinks] = useState<{url: string; thumbnail: string}[]>([]);
   const [githubLinks, setGithubLinks] = useState<{url: string; thumbnail: string}[]>([]);
@@ -57,64 +73,59 @@ export default function Dashboard() {
     await supabase.auth.signOut();
   };
 
+  // Update the type for resources state
+  
   async function fetchResources(topic: string) {
     setIsLoading(true);
     setResources("");
-
+    console.log("topic", topic);
     try {
-      const response = await fetch("/api/fetchResources", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await axios.post("/api/fetchResources", { topic });
+      console.log("response", response.data);
+      
+      // Validate response data
+      if (response.data && Array.isArray(response.data.steps)) {
+        // Type check and transform the response data
+        const typedSteps: Step[] = response.data.steps.map((step: any) => ({
+          id: String(step.id),
+          title: String(step.title),
+          duration: String(step.duration),
+          description: String(step.description),
+          subSteps: Array.isArray(step.subSteps) ? step.subSteps.map(String) : []
+        }));
+  
+        // Set resources with properly typed data
+        setResources({ steps: typedSteps });
+  
+        // Update recent topics
+        setRecentTopics(prev => {
+          const newTopics = [topic, ...prev.filter(t => t !== topic)].slice(0, 5);
+          return newTopics;
+        });
+      } else {
+        throw new Error("Invalid response format");
       }
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No reader available");
-
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        // Decode the chunk and append to resources
-        const text = decoder.decode(value, { stream: true });
-        setResources((prev) => prev + text);
-      }
-
-      // Final decode to flush any remaining bytes
-      decoder.decode(undefined, { stream: false });
     } catch (error) {
       console.error("Error fetching resources:", error);
-      setResources("An error occurred while fetching resources.");
+      setResources(error instanceof Error ? error.message : "An error occurred while fetching resources.");
     } finally {
       setIsLoading(false);
     }
   }
+  
 
-  async function extractLinks(jsonString: string) {
+  async function extractLinks(data: RoadmapData | string) {
     try {
-      if (!jsonString) {
-        console.log("Empty jsonString received");
+      if (!data) {
+        console.log("Empty data received");
         return { youtubeLinks: [], githubLinks: [] };
       }
-  
-      console.log("Processing raw string:", jsonString);
-  
-      const lines = jsonString.split("\n");
+
       const youtubeLinks: { url: string; thumbnail: string }[] = [];
       const githubLinks: { url: string; thumbnail: string }[] = [];
-  
-      // Process each line
-      for (const line of lines) {
-        // Extract YouTube links
-        const youtubeMatch = line.match(
-          /\[.*?\]\((https:\/\/(?:www\.)?youtube\.com\/.*?)\)/
-        );
+
+      const processString = async (text: string) => {
+        const youtubeMatch = text.match(/\[.*?\]\((https:\/\/(?:www\.)?youtube\.com\/.*?)\)/);
         if (youtubeMatch) {
           const url = youtubeMatch[1];
           const thumbnail = await getYouTubeThumbnail(url);
@@ -122,11 +133,8 @@ export default function Dashboard() {
             youtubeLinks.push({ url, thumbnail });
           }
         }
-  
-        // Extract GitHub links
-        const githubMatch = line.match(
-          /\[.*?\]\((https:\/\/github\.com\/.*?)\)/
-        );
+
+        const githubMatch = text.match(/\[.*?\]\((https:\/\/github\.com\/.*?)\)/);
         if (githubMatch) {
           const url = githubMatch[1];
           const thumbnail = await getGitHubThumbnail(url);
@@ -134,16 +142,43 @@ export default function Dashboard() {
             githubLinks.push({ url, thumbnail });
           }
         }
+      };
+
+      // Handle structured data
+      if (typeof data === 'object' && 'steps' in data) {
+        const roadmap = data as RoadmapData;
+        for (const step of roadmap.steps) {
+          if (step.subSteps) {
+            for (const subStep of step.subSteps) {
+              if (subStep.includes('Resource:')) {
+                await processString(subStep);
+              }
+            }
+          }
+        }
+      } else if (typeof data === 'string') {
+        // Try to parse as JSON first
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.steps) {
+            return extractLinks(parsed);
+          }
+        } catch {
+          // Handle as plain text if parsing fails
+          const lines = data.split("\n");
+          for (const line of lines) {
+            await processString(line);
+          }
+        }
       }
-  
-      console.log("Extracted links:", { youtubeLinks, githubLinks });
+
       return { youtubeLinks, githubLinks };
     } catch (e) {
       console.error("Error in extractLinks:", e);
       return { youtubeLinks: [], githubLinks: [] };
     }
   }
-  
+
   async function getYouTubeThumbnail(url: string) {
     try {
         if (!url) {
@@ -276,36 +311,46 @@ export default function Dashboard() {
   }
 }
 
-  function formatResourcesAsMarkdown(jsonString: string) {
-    try {
-      let markdown = jsonString;
-      // const { youtubeLinks, githubLinks } = extractLinks(jsonString);
-
-      let formattedContent = `
-# ✨ Learning Path for ${topic}
-
-> 🎯 **Resource Summary:** ${youtubeLinks.length} Videos · ${
-        githubLinks.length
-      } Repositories
-
-
-
-${
-  markdown
-  // .replace(/\*\*/g, "✨**")
-  // .replace(/^#\s/gm, "# 🎯 ")
-  // .replace(/^##\s/gm, "## 📌 ")
-  // .replace(/^###\s/gm, "### 🔍 ")
-  // .replace(/\*(.*?)\*/g, "🔸 *$1*")
-}
-`;
-
-      return formattedContent;
-    } catch (e) {
-      console.error("Error formatting content:", e);
-      return jsonString;
+// Update formatResourcesAsMarkdown function
+function formatResourcesAsMarkdown(data: RoadmapData | string): string {
+  try {
+    // If it's already a string, return it
+    if (typeof data === 'string') {
+      return data;
     }
+
+    // For objects, ensure it's a valid roadmap
+    if (data && 'steps' in data) {
+      let markdown = `# ✨ Learning Path for ${topic}\n\n`;
+
+      data.steps.forEach((step) => {
+        markdown += `## ${step.title}\n`;
+        markdown += `**Duration:** ${step.duration}\n\n`;
+        markdown += `${step.description}\n\n`;
+        
+        if (step.subSteps?.length) {
+          step.subSteps.forEach((subStep) => {
+            if (subStep.startsWith('Resource:')) {
+              // Remove the Resource: prefix for cleaner display
+              markdown += `- ${subStep.replace('Resource:', '📚')}\n`;
+            } else {
+              markdown += `- ${subStep}\n`;
+            }
+          });
+          markdown += '\n';
+        }
+      });
+
+      return markdown;
+    }
+
+    // If it's an object but not a roadmap, stringify it properly
+    return JSON.stringify(data, null, 2);
+  } catch (e) {
+    console.error("Error formatting content:", e);
+    return String(data);
   }
+}
 
   // Get user initials for avatar
   const getUserInitials = () => {
@@ -487,32 +532,29 @@ ${
                   <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
                 </TabsList>
                 <TabsContent value="formatted" className="m-0">
-                  <div className="p-6 prose max-w-none dark:prose-invert">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeHighlight]}
-                      components={{
-                        code({ node, inline, className, children, ...props }) {
-                          const match = /language-(\w+)/.exec(className || "");
-                          return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={vscDarkPlus}
-                              language={match[1]}
-                              PreTag="div"
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, "")}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {formatResourcesAsMarkdown(resources)}
-                    </ReactMarkdown>
+                  <div className="p-6">
+                    <h1 className="text-3xl font-bold mb-6">✨ Learning Path for {topic}</h1>
+                    <p className="text-muted-foreground mb-6">
+                      🎯 Resource Summary: {youtubeLinks.length} Videos · {githubLinks.length} Repositories
+                    </p>
+                    {/* {typeof resources === 'object' && 'steps' in resources ? ( */}
+                    { resources && typeof resources === 'object' && 'steps' in resources &&
+                      resources.steps.map((step) => (
+                        <StepCard
+                        key={step.id}
+                        id={step.id}
+                        title={step.title}
+                        duration={step.duration}
+                          description={step.description}
+                          subSteps={step.subSteps}
+                          />
+                        ))
+                      } 
+                    {/* ) : (
+                      <pre className="bg-muted p-4 rounded-lg">
+                        {typeof resources === 'string' ? resources : JSON.stringify(resources, null, 2)}
+                      </pre>
+                    )} */}
                   </div>
                 </TabsContent>
                 <TabsContent value="markdown" className="m-0">
