@@ -1,18 +1,24 @@
 "use client";
+// Add this interface near the top with other interfaces
+interface ValidatedResources {
+  youtubeVideos: Array<{ title: string; url: string }>;
+  githubRepositories: Array<{ title: string; url: string }>;
+  blogArticles: Array<{ title: string; url: string }>;
+}
 
-// Move interfaces to top level
 interface Step {
   id: string;
   title: string;
   duration: string;
   description: string;
-  subSteps: string[];
+  resources: string[];
+  practice: string[];
+  validatedResources: ValidatedResources;
 }
 
 interface RoadmapData {
   steps: Step[];
 }
-
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown'
@@ -96,12 +102,32 @@ export default function Dashboard() {
             title: String(step.title),
             duration: String(step.duration),
             description: String(step.description),
-            subSteps: Array.isArray(step.subSteps) ? step.subSteps.map(String) : []
+            resources: Array.isArray(step.resources) ? step.resources.map(String) : [],
+            practice: Array.isArray(step.practice) ? step.practice.map(String) : [],
+            validatedResources: {
+              youtubeVideos: Array.isArray(step.validatedResources?.youtubeVideos) 
+                ? step.validatedResources.youtubeVideos.map((v: any) => ({
+                    title: String(v.title),
+                    url: String(v.url)
+                  }))
+                : [],
+              githubRepositories: Array.isArray(step.validatedResources?.githubRepositories)
+                ? step.validatedResources.githubRepositories.map((r: any) => ({
+                    title: String(r.title),
+                    url: String(r.url)
+                  }))
+                : [],
+              blogArticles: Array.isArray(step.validatedResources?.blogArticles)
+                ? step.validatedResources.blogArticles.map((a: any) => ({
+                    title: String(a.title),
+                    url: String(a.url)
+                  }))
+                : []
+            }
           }));
-  
+        
           // Set resources with properly typed data
           setResources({ steps: typedSteps });
-  
           // Update recent topics
           setRecentTopics(prev => {
             const newTopics = [topic, ...prev.filter(t => t !== topic)].slice(0, 5);
@@ -550,15 +576,17 @@ function formatResourcesAsMarkdown(data: RoadmapData | string): string {
                     { resources && typeof resources === 'object' && 'steps' in resources &&
                       resources.steps.map((step) => (
                         <StepCard
-                        key={step.id}
-                        id={step.id}
-                        title={step.title}
-                        duration={step.duration}
+                          key={step.id}
+                          id={step.id}
+                          title={step.title}
+                          duration={step.duration}
                           description={step.description}
-                          subSteps={step.subSteps}
-                          />
-                        ))
-                      } 
+                          resources={step.resources}
+                          practice={step.practice}
+                          validatedResources={step.validatedResources}
+                        />
+                      ))
+                    } 
                     {/* ) : (
                       <pre className="bg-muted p-4 rounded-lg">
                         {typeof resources === 'string' ? resources : JSON.stringify(resources, null, 2)}

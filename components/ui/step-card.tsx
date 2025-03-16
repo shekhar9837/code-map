@@ -14,7 +14,13 @@ interface StepCardProps {
   title: string;
   duration: string;
   description: string;
-  subSteps: string[];
+  resources: string[];
+  practice: string[];
+  validatedResources: {
+    youtubeVideos: Array<{ title: string; url: string }>;
+    githubRepositories: Array<{ title: string; url: string }>;
+    blogArticles: Array<{ title: string; url: string }>;
+  };
 }
 
 function parseMarkdownLink(text: string) {
@@ -54,7 +60,24 @@ function parseMarkdownLink(text: string) {
   return parts;
 }
 
-export function StepCard({ id, title, duration, description, subSteps }: StepCardProps) {
+const ResourceSection = ({ title, items }: { title: string; items: Array<{ title: string; url: string }> }) => (
+  items.length > 0 && (
+    <div className="mt-4">
+      <h4 className="font-medium mb-2">{title}</h4>
+      <ul className="space-y-2">
+        {items.map((item, idx) => (
+          <li key={idx}>
+            <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              {item.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+);
+
+export function StepCard({ id, title, duration, description, resources, practice, validatedResources }: StepCardProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   return (
@@ -78,22 +101,36 @@ export function StepCard({ id, title, duration, description, subSteps }: StepCar
       {isExpanded && (
         <CardContent>
           <p className="mb-4 text-muted-foreground">{description}</p>
-          <ul className="space-y-3">
-            {subSteps.map((step, index) => (
-              <li key={index} className="flex gap-2 items-start">
-                <span className="text-primary mt-1 text-blue-500">
-                  {step.startsWith('Resource:') ? '📚' : '✨'}
-                </span>
-                <div className="flex-1">
-                  {parseMarkdownLink(
-                    step.startsWith('Resource:') 
-                      ? step.replace('Resource:', '').trim()
-                      : step
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Resources</h4>
+              <ul className="space-y-2">
+                {resources.map((resource, index) => (
+                  <li key={index} className="flex gap-2 items-start">
+                    <span className="text-primary mt-1">📚</span>
+                    <div className="flex-1">{parseMarkdownLink(resource)}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Practice</h4>
+              <ul className="space-y-2">
+                {practice.map((item, index) => (
+                  <li key={index} className="flex gap-2 items-start">
+                    <span className="text-primary mt-1">✨</span>
+                    <div className="flex-1">{parseMarkdownLink(item)}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <ResourceSection title="YouTube Videos" items={validatedResources.youtubeVideos} />
+            <ResourceSection title="GitHub Repositories" items={validatedResources.githubRepositories} />
+            <ResourceSection title="Blog Articles" items={validatedResources.blogArticles} />
+          </div>
         </CardContent>
       )}
     </Card>
