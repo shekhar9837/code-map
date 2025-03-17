@@ -81,9 +81,9 @@ export function StepCard({ id, title, duration, description, resources, practice
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   return (
-    <Card className="mb-4">
+    <Card className="mb-4  overflow-hidden text-slate-300">
       <CardHeader 
-        className="cursor-pointer hover:bg-muted/50 transition-colors" 
+        className="cursor-pointer hover:bg-muted/10 transition-colors" 
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">
@@ -100,7 +100,7 @@ export function StepCard({ id, title, duration, description, resources, practice
       </CardHeader>
       {isExpanded && (
         <CardContent>
-          <p className="mb-4 text-muted-foreground">{description}</p>
+          <p className="mb-4 text-muted-foreground ">{description}</p>
           
           <div className="space-y-4">
             <div>

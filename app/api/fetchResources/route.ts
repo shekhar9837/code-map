@@ -92,7 +92,7 @@ export async function POST(req: Request) {
 
     // Generate learning roadmap
     const prompt = `
-    Create a structured learning path for ${topic} with steps. Each step should include:
+    Create a structured learning roadmap  based on  ${topic} with 7-8 steps . Each step should include:
     - A title
     - Duration (e.g., "4 hours")
     - A brief description
