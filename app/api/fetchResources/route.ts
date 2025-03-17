@@ -9,23 +9,27 @@ const GOOGLE_CX = process.env.GOOGLE_CX!; // Custom Search Engine ID
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-async function fetchYouTubeVideos(topic: string): Promise<string[]> {
+// ✅ Fetch YouTube video for a specific step title
+async function fetchYouTubeVideoForStep(stepTitle: string): Promise<string | null> {
   try {
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
-    topic
-  )}&type=video&key=${YOUTUBE_API_KEY}&maxResults=3`
+        stepTitle
+      )}&type=video&key=${YOUTUBE_API_KEY}&maxResults=1`
     );
-    console.log("YouTube API Response:", response);
     const data = await response.json();
+    console.log("YouTube API Response:", data);
 
-    return data?.items?.map((item: any) => `https://www.youtube.com/watch?v=${item.id.videoId}`);
+    if (data.items && data.items.length > 0) {
+      return `https://www.youtube.com/watch?v=${data.items[0]?.id?.videoId}`;
+    }
   } catch (error) {
     console.error("YouTube API Error:", error);
-    return [];
   }
+  return null;
 }
 
+// ✅ Fetch GitHub repositories
 async function fetchGitHubRepos(topic: string): Promise<string[]> {
   try {
     const response = await fetch(
@@ -42,27 +46,35 @@ async function fetchGitHubRepos(topic: string): Promise<string[]> {
   }
 }
 
-async function fetchBlogArticles(topic: string): Promise<string[]> {
+async function fetchBlogArticles(query: string) {
   try {
-    const response = await fetch(
-      `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(topic)}&key=${GOOGLE_SEARCH_API_KEY}&cx=${GOOGLE_CX}&num=3`
-    );
-    const data = await response.json();
-    return data.items.map((item: any) => item.link);
+      const API_KEY = process.env.GOOGLE_SEARCH_API_KEY;
+      const CX = process.env.GOOGLE_CSE_ID;
+      const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${API_KEY}&cx=${CX}&num=5`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.items) {
+          console.error("No blog articles found.");
+          return []; // Return empty array to prevent undefined error
+      }
+
+      return data.items.map((item: any) => item.link);
   } catch (error) {
-    console.error("Google Search API Error:", error);
-    return [];
+      console.error("Error fetching blog articles:", error);
+      return [];
   }
 }
 
+// ✅ Fetch all learning resources
 async function fetchResources(topic: string) {
-  const [youtube, github, blogs] = await Promise.all([
-    fetchYouTubeVideos(topic),
+  const [github, blogs] = await Promise.all([
     fetchGitHubRepos(topic),
     fetchBlogArticles(topic),
   ]);
 
-  return { youtube, github, blogs };
+  return { github, blogs };
 }
 
 export async function POST(req: Request) {
@@ -70,13 +82,15 @@ export async function POST(req: Request) {
     const { topic } = await req.json();
     if (!topic) return NextResponse.json({ error: "Topic is required" }, { status: 400 });
 
+    // Fetch validated resources (GitHub & Blogs)
     const resources = await fetchResources(topic);
     console.log("✅ Validated Resources:", resources);
 
-    if (!resources.youtube.length && !resources.github.length && !resources.blogs.length) {
+    if (!resources.github.length && !resources.blogs.length) {
       return NextResponse.json({ error: "No valid resources found" }, { status: 404 });
     }
 
+    // Generate learning roadmap
     const prompt = `
     Create a structured learning path for ${topic} with steps. Each step should include:
     - A title
@@ -85,11 +99,13 @@ export async function POST(req: Request) {
     - Learning resources: [Title](URL)
     - Practice exercises
     - **Validated Resources**:
-      - YouTube Videos: ${resources.youtube.map((url) => `- [Watch Here](${url})`).join("\n")}
       - GitHub Repositories: ${resources.github.map((url) => `- [Explore Here](${url})`).join("\n")}
-      - Blog Articles: ${resources.blogs.map((url) => `- [Read Here](${url})`).join("\n")}
+      - Blog Articles: ${resources.blogs.map((url:any) => `- [Read Here](${url})`).join("\n")}
     
-    Return JSON like:
+    IMPORTANT: Return ONLY a raw JSON object without any markdown formatting, code blocks, or backticks.
+    The response must start with { and end with } and be valid JSON.
+    
+    Example format:
     {
       "steps": [
         {
@@ -105,13 +121,33 @@ export async function POST(req: Request) {
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const result = await model.generateContentStream(prompt);
+    let text = '';
+    for await (const chunk of result.stream) {
+      text += chunk.text();
+    }
+    let roadmap;
+    try {
+      roadmap = JSON.parse(text);
+    } catch (error) {
+      console.error("Failed to parse AI response:", error);
+      return NextResponse.json({ error: "Failed to generate learning path" }, { status: 500 });
+    }
 
+    if (roadmap.steps && roadmap.steps.length > 0) {
+      // ✅ Fetch YouTube videos for each step title
+      for (const step of roadmap.steps) {
+        const video = await fetchYouTubeVideoForStep(step.title);
+        if (video) {
+          step.resources.push(`Video: [Watch Here](${video})`);
+        }
+      }
+    }
+
+    // ✅ Stream the updated roadmap response
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of result.stream) {
-            controller.enqueue(chunk.text());
-          }
+          controller.enqueue(JSON.stringify(roadmap));
           controller.close();
         } catch (error) {
           controller.error(error);

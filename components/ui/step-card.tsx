@@ -77,7 +77,7 @@ const ResourceSection = ({ title, items }: { title: string; items: Array<{ title
   )
 );
 
-export function StepCard({ id, title, duration, description, resources, practice, validatedResources }: StepCardProps) {
+export function StepCard({ id, title, duration, description, resources, practice,  }: StepCardProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   return (
@@ -127,9 +127,9 @@ export function StepCard({ id, title, duration, description, resources, practice
               </ul>
             </div>
 
-            <ResourceSection title="YouTube Videos" items={validatedResources.youtubeVideos} />
+            {/* <ResourceSection title="YouTube Videos" items={validatedResources.youtubeVideos} />
             <ResourceSection title="GitHub Repositories" items={validatedResources.githubRepositories} />
-            <ResourceSection title="Blog Articles" items={validatedResources.blogArticles} />
+            <ResourceSection title="Blog Articles" items={validatedResources.blogArticles} /> */}
           </div>
         </CardContent>
       )}

@@ -85,51 +85,20 @@
   }
 }
 
+/* 
+--custom-100: oklab(29.2% 0.025 -0.041);
+--custom-200: oklab(13.1% 0.044 -0.031);
+--custom-300: oklab(30.5% 0.119 -0.022);
+--custom-400: oklab(39.7% -0.06 -0.026);
+--custom-500: oklab(16.3% -0.03 0.013); */
 
-.prose {
-  @apply max-w-none;
-}
 
-.prose h1 {
-  @apply text-4xl font-bold mb-8 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent;
-}
-
-.prose h2 {
-  @apply text-2xl font-semibold mb-6 text-primary;
-}
-
-.prose h3 {
-  @apply text-xl font-medium mb-4;
-}
-
-.prose blockquote {
-  @apply border-l-4 border-primary pl-4 italic my-6 bg-muted/50 p-4 rounded-r-lg;
-}
-
-.prose img {
-  @apply rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200;
-}
-
-.prose pre {
-  @apply bg-muted rounded-lg p-4 overflow-x-auto;
-}
-
-.prose code {
-  @apply bg-muted px-1.5 py-0.5 rounded text-sm;
-}
-
-.prose a {
-  @apply text-primary hover:text-primary/80 transition-colors duration-200;
-}
-
-.dark .prose {
-  @apply prose-invert;
-}
-
-.prose-sm {
-  @apply text-sm;
-}
-
-.prose-lg {
-  @apply text-lg;
+.mesh-gradient {
+  background: radial-gradient(at 89% 23%, #b71b98 0px, transparent 50%), 
+              radial-gradient(at 6% 42%, #b71b4a 0px, transparent 50%), 
+              radial-gradient(at 97% 84%, #b73a1b 0px, transparent 50%), 
+              radial-gradient(at 43% 39%, #1bb73a 0px, transparent 50%), 
+              radial-gradient(at 30% 26%, #1b98b7 0px, transparent 50%) #1d1b1b;
+  mix-blend-mode: normal;
+  filter: blur(0px);
 }
