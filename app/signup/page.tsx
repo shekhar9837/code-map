@@ -18,6 +18,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { FcGoogle } from 'react-icons/fc'
 import Link from 'next/link'
 
+
 const formSchema = z.object({
   userName: z.string().min(3, {
     message: "Username must be at least 3 characters.",
