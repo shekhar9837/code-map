@@ -4,8 +4,6 @@ import { NextResponse } from "next/server";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
-const GOOGLE_SEARCH_API_KEY = process.env.GOOGLE_SEARCH_API_KEY!;
-const GOOGLE_CX = process.env.GOOGLE_CX!; // Custom Search Engine ID
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -39,6 +37,7 @@ async function fetchGitHubRepos(topic: string): Promise<string[]> {
       }
     );
     const data = await response.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.items.slice(0, 2).map((repo: any) => repo.html_url);
   } catch (error) {
     console.error("GitHub API Error:", error);
@@ -46,24 +45,29 @@ async function fetchGitHubRepos(topic: string): Promise<string[]> {
   }
 }
 
-async function fetchBlogArticles(query: string) {
+// Define a type for the blog items
+interface BlogItem {
+  link: string;
+}
+
+async function fetchBlogArticles(query: string): Promise<string[]> {
   try {
-      const API_KEY = process.env.GOOGLE_SEARCH_API_KEY;
-      const CX = process.env.GOOGLE_CSE_ID;
-      const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${API_KEY}&cx=${CX}&num=5`;
+    const API_KEY = process.env.GOOGLE_SEARCH_API_KEY;
+    const CX = process.env.GOOGLE_CSE_ID;
+    const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${API_KEY}&cx=${CX}&num=5`;
 
-      const response = await fetch(url);
-      const data = await response.json();
+    const response = await fetch(url);
+    const data = await response.json();
 
-      if (!data.items) {
-          console.error("No blog articles found.");
-          return []; // Return empty array to prevent undefined error
-      }
+    if (!data.items) {
+      console.error("No blog articles found.");
+      return []; // Return empty array to prevent undefined error
+    }
 
-      return data.items.map((item: any) => item.link);
+    return data.items.map((item: BlogItem) => item.link);
   } catch (error) {
-      console.error("Error fetching blog articles:", error);
-      return [];
+    console.error("Error fetching blog articles:", error);
+    return [];
   }
 }
 
@@ -91,8 +95,26 @@ export async function POST(req: Request) {
     }
 
     // Generate learning roadmap
+    interface Resource {
+      github: string[];
+      blogs: string[];
+    }
+
+    interface Step {
+      id: string;
+      title: string;
+      duration: string;
+      description: string;
+      resources: string[];
+      practice: string[];
+    }
+
+    interface Roadmap {
+      steps: Step[];
+    }
+
     const prompt = `
-    Create a structured learning roadmap  based on  ${topic} with 7-8 steps . Each step should include:
+    Create a structured learning roadmap based on ${topic} with 7-8 steps. Each step should include:
     - A title
     - Duration (e.g., "4 hours")
     - A brief description
@@ -100,11 +122,11 @@ export async function POST(req: Request) {
     - Practice exercises
     - **Validated Resources**:
       - GitHub Repositories: ${resources.github.map((url) => `- [Explore Here](${url})`).join("\n")}
-      - Blog Articles: ${resources.blogs.map((url:any) => `- [Read Here](${url})`).join("\n")}
-    
+      - Blog Articles: ${resources.blogs.map((url) => `- [Read Here](${url})`).join("\n")}
+
     IMPORTANT: Return ONLY a raw JSON object without any markdown formatting, code blocks, or backticks.
     The response must start with { and end with } and be valid JSON.
-    
+
     Example format:
     {
       "steps": [
@@ -136,7 +158,7 @@ export async function POST(req: Request) {
     if (roadmap.steps && roadmap.steps.length > 0) {
       // ✅ Fetch YouTube videos for each step title
       for (const step of roadmap.steps) {
-        const video = await fetchYouTubeVideoForStep(step.title);
+        const video = await fetchYouTubeVideoForStep(`${topic}` + step.title);
         if (video) {
           step.resources.push(`Video: [Watch Here](${video})`);
         }
