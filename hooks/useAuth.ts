@@ -27,5 +27,6 @@ export function useAuth() {
     }
   }, [supabase, router])
 
+  
   return { user, loading }
 }
