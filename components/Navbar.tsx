@@ -27,17 +27,17 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             <div className="hidden md:flex">
               <p className="text-sm  text-slate-200">
-                Signed in as {user?.user_metadata.full_name}
+                {/* Signed in as {user?.user_metadata.full_name} */}
                 {/* Signed in as {user?.user_metadata.email} */}
               </p>
             </div>
-            <Avatar className="h-8 w-8 border">
+            {/* <Avatar className="h-8 w-8 border">
               <AvatarImage
                 src={user?.user_metadata?.avatar_url}
                 alt={user?.email || ""}
               />
               <AvatarFallback>{getUserInitials()}</AvatarFallback>
-            </Avatar>
+            </Avatar> */}
             <Button onClick={handleLogout} variant="ghost" size="icon" className=' text-slate-100'>
               <LogOut className="h-5 w-5" />
               <span className="sr-only">Logout</span>
