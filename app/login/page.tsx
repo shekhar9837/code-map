@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FcGoogle } from 'react-icons/fc' // Add this import for Google icon
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -42,19 +41,6 @@ export default function LoginPage() {
     router.push('/dashboard') // or wherever you want to redirect after login
   }
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
-
-    if (error) {
-      console.error('Error signing in with Google:', error.message)
-    }
-  }
-
   return (
     <div className="max-w-md mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-bold">Login</h1>
@@ -86,38 +72,14 @@ export default function LoginPage() {
               </FormItem>
             )}
           />
-          <div className="space-y-4">
-            <Button type="submit" className="w-full">Log in</Button>
-            
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full" 
-              onClick={signInWithGoogle}
-            >
-              <FcGoogle className="mr-2 h-4 w-4" />
-              Google
-            </Button>
-          </div>
-
+          <Button type="submit">Log in</Button>
           {form.formState.errors.root && (
             <p className="text-red-500">{form.formState.errors.root.message}</p>
           )}
         </form>
       </Form>
       <p className="text-center">
-        Don&apos;t have an account? <Link href="/signup" className="text-blue-500 hover:underline">Sign up</Link>
+        Don't have an account? <Link href="/signup" className="text-blue-500 hover:underline">Sign up</Link>
       </p>
     </div>
   )
