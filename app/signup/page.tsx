@@ -1,6 +1,6 @@
 'use client'
 import { Button } from '@/components/ui/button'
-import {  signup } from './actions'
+import { signup } from './actions'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -30,6 +30,10 @@ const formSchema = z.object({
   }),
 })
 
+const redirectTo = process.env.NODE_ENV === 'production'
+  ? 'https://code-map-wine.vercel.app/auth/callback'
+  : `${window.location.origin}/auth/callback`
+
 export default function SignupPage() {
   const supabase = createClientComponentClient()
 
@@ -46,18 +50,16 @@ export default function SignupPage() {
   })
 
   const onSignup = async (values: z.infer<typeof formSchema>) => {
-    try {
-      setIsLoading(true)
-      setError('')
-      const formData = new FormData()
-      formData.append('userName', values.userName)
-      formData.append('email', values.email)
-      formData.append('password', values.password)
-      await signup(formData)
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Something went wrong')
-    } finally {
-      setIsLoading(false)
+    const { error } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
+      options: {
+        emailRedirectTo: redirectTo,
+      }
+    })
+
+    if (error) {
+      console.error('Error signing up with Google:', error.message)
     }
   }
 
