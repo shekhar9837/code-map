@@ -24,11 +24,11 @@ const Navbar = () => {
             <BookOpen className="h-6 w-6 " />
             <h1 className="text-xl font-bold">CodePath</h1>
           </div>
-          {/* <div className="flex items-center gap-4">
+           <div className="flex items-center gap-4">
             <div className="hidden md:flex">
               <p className="text-sm  text-slate-200">
-                Signed in as {user?.user_metadata.full_name}
-                Signed in as {user?.user_metadata.email}
+                Signed in as {user?.user_metadata?.full_name} Shekhar
+                {/* Signed in as {user?.user_metadata.email} */}
               </p>
             </div>
             <Avatar className="h-8 w-8 border">
@@ -42,7 +42,7 @@ const Navbar = () => {
               <LogOut className="h-5 w-5" />
               <span className="sr-only">Logout</span>
             </Button>
-          </div> */}
+          </div> 
         </div>
       </header>
   )

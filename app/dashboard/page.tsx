@@ -1,9 +1,9 @@
 "use client";
-// Add this interface near the top with other interfaces
+
 interface ValidatedResources {
-  youtubeVideos: Array<{ title: string; url: string }>;
-  githubRepositories: Array<{ title: string; url: string }>;
-  blogArticles: Array<{ title: string; url: string }>;
+  youtubeVideos?: Array<{ title: string; url: string }>;
+  githubRepositories?: Array<{ title: string; url: string }>;
+  blogArticles?: Array<{ title: string; url: string }>;
 }
 
 interface Step {
@@ -18,13 +18,15 @@ interface Step {
 
 interface RoadmapData {
   steps: Step[];
+  resources?: {
+    github?: string[];
+    blogs?: string[];
+  };
 }
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +52,20 @@ const LoadingView = () => (
       <span className="text-sm text-muted-foreground ml-2">(Loading...)</span>
     </h2>
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {Array(3).fill(0).map((_, i) => (
+      {Array(4).fill(0).map((_, i) => (
+        <div key={i} className="space-y-2">
+          <Skeleton className="h-40 w-full rounded-lg bg-card" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      ))}
+    </div>
+    <h2 className="text-lg font-bold flex items-center gap-2">
+      <Youtube className="h-5 w-5 text-red-500" />
+      Blogs & Repositories
+      <span className="text-sm text-muted-foreground ml-2">(Loading...)</span>
+    </h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {Array(4).fill(0).map((_, i) => (
         <div key={i} className="space-y-2">
           <Skeleton className="h-40 w-full rounded-lg bg-card" />
           <Skeleton className="h-4 w-3/4" />
@@ -58,25 +73,15 @@ const LoadingView = () => (
       ))}
     </div>
 
-    {/* <h2 className="text-lg font-bold flex items-center gap-2 mt-8">
-      <Github className="h-5 w-5 text-purple-500" />
-      GitHub Repositories
-      <span className="text-sm text-muted-foreground ml-2">(Loading...)</span>
-    </h2> */}
-    {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {Array(3).fill(0).map((_, i) => ( */}
-        <div  className="w-full">
-          <Skeleton className="min-h-screen w-full rounded-lg bg-card" />
-          <Skeleton className="h-4 w-3/4" />
-        </div>
-      {/* ))} */}
-    {/* </div> */}
+    <div className="w-full">
+      <Skeleton className="md:min-h-screen h-[60vh] w-full rounded-lg bg-card" />
+      <Skeleton className="h-4 w-3/4" />
+    </div>
   </div>
 );
 
 export default function Dashboard() {
   const [topic, setTopic] = useState("");
-  // const [resources, setResources] = useState<any>("");
   const [isLoading, setIsLoading] = useState(false);
   const [recentTopics, setRecentTopics] = useState<string[]>([
     "React",
@@ -85,19 +90,11 @@ export default function Dashboard() {
   ]);
 
   const [resources, setResources] = useState<RoadmapData | string>("");
-  // console.log("resources", resources);
-  // console.log("topic", topic);
-
-  const [youtubeLinks, setYoutubeLinks] = useState<
-    { url: string; thumbnail: string }[]
-  >([]);
-  const [githubLinks, setGithubLinks] = useState<
-    { url: string; thumbnail: string }[]
-  >([]);
-
+  const [youtubeLinks, setYoutubeLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
+  const [githubLinks, setGithubLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Example usage
+  // Process the resources when they change
   useEffect(() => {
     async function processLinks() {
       console.log("Processing resources:", resources); // Debug log
@@ -112,10 +109,6 @@ export default function Dashboard() {
     }
   }, [resources]);
 
- 
-
-  // Update the type for resources state
-
   async function fetchResources(topic: string) {
     setIsLoading(true);
     setIsSearching(true);
@@ -124,16 +117,26 @@ export default function Dashboard() {
     try {
       const response = await axios.post("/api/fetchResources", { topic });
       console.log("response", response.data);
-      const result = response.data;
+      
+      // Format the data to match our expected structure
+      let result;
+      if (response.data && response.data.roadmap) {
+        // Handle the case where data is returned with a 'roadmap' key
+        result = {
+          steps: response.data.roadmap.steps,
+          resources: response.data.resources // Pass along the additional resources if present
+        };
+      } else {
+        // Handle direct data format
+        result = response.data;
+      }
 
-      // Set resources with properly typed data
+      // Set resources
       setResources(result);
+      
       // Update recent topics
       setRecentTopics((prev) => {
-        const newTopics = [topic, ...prev.filter((t) => t !== topic)].slice(
-          0,
-          5
-        );
+        const newTopics = [topic, ...prev.filter((t) => t !== topic)].slice(0, 5);
         return newTopics;
       });
     } catch (error) {
@@ -184,40 +187,81 @@ export default function Dashboard() {
         }
       };
 
-      if (typeof data === "object" && "steps" in data) {
+      // Process data based on format
+      if (typeof data === "object") {
         console.log("Processing roadmap data");
-
-        for (const step of data.steps) {
-          // Process markdown resources
-          if (step.resources?.length) {
-            for (const resource of step.resources) {
-              await processMarkdownResource(resource);
-            }
-          }
-
-          // Process validated resources
-          if (step.validatedResources) {
-            // Process GitHub repositories
-            if (step.validatedResources.githubRepositories?.length) {
-              for (const repo of step.validatedResources.githubRepositories) {
-                const thumbnail = await getGitHubThumbnail(repo.url);
-                if (thumbnail) {
-                  console.log("Added validated GitHub link:", repo.url);
-                  githubLinks.push({ url: repo.url, thumbnail });
-                }
+        
+        // Process steps if available
+        if (data.steps && Array.isArray(data.steps)) {
+          for (const step of data.steps) {
+            // Process markdown resources
+            if (step.resources?.length) {
+              for (const resource of step.resources) {
+                await processMarkdownResource(resource);
               }
             }
 
-            // Look for YouTube videos in resources that contain "Video: [Watch Here]"
-            const videoResources =
-              step.resources?.filter(
-                (r) =>
-                  r.toLowerCase().includes("video:") ||
-                  r.toLowerCase().includes("watch here")
+            // Process validated resources
+            if (step.validatedResources) {
+              // Process GitHub repositories as strings
+              if (step.validatedResources.githubRepositories?.length) {
+                for (const repo of step.validatedResources.githubRepositories) {
+                  if (typeof repo === 'string') {
+                    // Extract URL from "Explore Here: [AwesomeRepo](https://github.com/...)" format
+                    const match = (repo as string).match(/\[(.*?)\]\((.*?)\)/);
+                    if (match && match[2].includes('github.com')) {
+                      const url = match[2];
+                      const thumbnail = await getGitHubThumbnail(url);
+                      if (thumbnail) {
+                        console.log("Added validated GitHub link:", url);
+                        githubLinks.push({ url, thumbnail });
+                      }
+                    }
+                  } else if (typeof repo === 'object' && repo.url) {
+                    // Handle object format { title, url }
+                    const thumbnail = await getGitHubThumbnail(repo.url);
+                    if (thumbnail) {
+                      console.log("Added validated GitHub link:", repo.url);
+                      githubLinks.push({ url: repo.url, thumbnail });
+                    }
+                  }
+                }
+              }
+
+              // Look for YouTube videos in resources that contain "Video: [Watch Here]"
+              const videoResources = step.resources?.filter(
+                (r) => r.toLowerCase().includes("video:") || r.toLowerCase().includes("watch here")
               ) || [];
 
-            for (const resource of videoResources) {
-              await processMarkdownResource(resource);
+              for (const resource of videoResources) {
+                await processMarkdownResource(resource);
+              }
+            }
+          }
+        }
+        
+        // Process additional resources if available
+        if (data.resources) {
+          // Process GitHub links
+          if (data.resources.github && Array.isArray(data.resources.github)) {
+            for (const url of data.resources.github) {
+              const thumbnail = await getGitHubThumbnail(url);
+              if (thumbnail) {
+                console.log("Added additional GitHub link:", url);
+                githubLinks.push({ url, thumbnail });
+              }
+            }
+          }
+          
+          // Process blog links (some might be GitHub)
+          if (data.resources.blogs && Array.isArray(data.resources.blogs)) {
+            for (const url of data.resources.blogs) {
+              if (url.includes('github.com')) {
+                const thumbnail = await getGitHubThumbnail(url);
+                if (thumbnail) {
+                  githubLinks.push({ url, thumbnail });
+                }
+              }
             }
           }
         }
@@ -265,37 +309,26 @@ export default function Dashboard() {
 
       const videoId = videoIdMatch[1];
       const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+      
+      // If API key is not available, return a default thumbnail
+      if (!apiKey) {
+        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      }
+      
       const response = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${apiKey}`
       );
 
       if (!response.ok) {
         console.log("Failed to fetch video data:", url);
-        return null;
+        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
       }
 
       const data = await response.json();
       if (!data.items || data.items.length === 0) {
         console.log("Video not found or unavailable:", url);
-        return null;
+        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
       }
-
-      const video = data.items[0];
-      const publishedAt = new Date(video.snippet.publishedAt);
-      const viewCount = parseInt(video.statistics.viewCount);
-      const likeCount = parseInt(video.statistics.likeCount);
-
-      // Validate video criteria
-      const isRecent =
-        new Date().getTime() - publishedAt.getTime() <
-        2 * 365 * 24 * 60 * 60 * 1000; // 2 years
-      const hasEnoughViews = viewCount > 10000;
-      const hasGoodEngagement = likeCount > 100;
-
-      // if (!isRecent || !hasEnoughViews || !hasGoodEngagement) {
-      //     console.log("Video doesn't meet quality criteria:", url);
-      //     return null;
-      // }
 
       return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     } catch (e) {
@@ -315,6 +348,11 @@ export default function Dashboard() {
       const [owner, repo] = repoPath.split("/");
       const githubToken = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
 
+      // If GitHub token is not available, return a default image
+      if (!githubToken) {
+        return `https://opengraph.githubassets.com/1/${repoPath}`;
+      }
+
       const response = await fetch(
         `https://api.github.com/repos/${owner}/${repo}`,
         {
@@ -328,19 +366,7 @@ export default function Dashboard() {
 
       if (!response.ok) {
         console.log("Failed to fetch repository data:", url);
-        return null;
-      }
-
-      const data = await response.json();
-      const lastUpdate = new Date(data.updated_at);
-      const isRecent =
-        new Date().getTime() - lastUpdate.getTime() < 180 * 24 * 60 * 60 * 1000; // 6 months
-      const hasEnoughStars = data.stargazers_count >= 500;
-      const isNotArchived = !data.archived;
-
-      if (!isRecent || !hasEnoughStars || !isNotArchived) {
-        console.log("Repository doesn't meet quality criteria:", url);
-        return null;
+        return `https://opengraph.githubassets.com/1/${repoPath}`;
       }
 
       return `https://opengraph.githubassets.com/1/${repoPath}`;
@@ -350,41 +376,7 @@ export default function Dashboard() {
     }
   }
 
-  async function isValidURL(url: string) {
-    try {
-      if (!url) {
-        console.error("No URL provided");
-        return false;
-      }
-
-      const response = await fetch("/api/validateUrl", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url }),
-      });
-
-      if (!response.ok) {
-        console.error("API response not ok:", response.status);
-        return false;
-      }
-
-      const data = await response.json();
-
-      if (!data) {
-        console.error("No data received from API");
-        return false;
-      }
-
-      return data.isValid === true;
-    } catch (error) {
-      console.error("Error checking URL validity:", error);
-      return false;
-    }
-  }
-
-  // Update formatResourcesAsMarkdown function
+  // Function to format roadmap data as Markdown
   function formatResourcesAsMarkdown(data: RoadmapData | string): string {
     try {
       // If it's already a string, return it
@@ -402,17 +394,48 @@ export default function Dashboard() {
           markdown += `${step.description}\n\n`;
 
           if (step.resources?.length) {
-            step.resources.forEach((subStep) => {
-              if (subStep.startsWith("Resource:")) {
+            markdown += `### Resources\n`;
+            step.resources.forEach((resource) => {
+              if (resource.startsWith("Resource:")) {
                 // Remove the Resource: prefix for cleaner display
-                markdown += `- ${subStep.replace("Resource:", "📚")}\n`;
+                markdown += `- ${resource.replace("Resource:", "📚")}\n`;
               } else {
-                markdown += `- ${subStep}\n`;
+                markdown += `- ${resource}\n`;
               }
             });
             markdown += "\n";
           }
+
+          if (step.practice?.length) {
+            markdown += `### Practice\n`;
+            step.practice.forEach((practice) => {
+              markdown += `- ✨ ${practice}\n`;
+            });
+            markdown += "\n";
+          }
         });
+
+        // Include additional resources if present
+        if (data.resources) {
+          markdown += `## Additional Resources\n\n`;
+          
+          if (data.resources.github?.length) {
+            markdown += `### GitHub Repositories\n`;
+            data.resources.github.forEach(url => {
+              const repoName = url.replace("https://github.com/", "");
+              markdown += `- [${repoName}](${url})\n`;
+            });
+            markdown += "\n";
+          }
+          
+          if (data.resources.blogs?.length) {
+            markdown += `### Blog Articles\n`;
+            data.resources.blogs.forEach(url => {
+              markdown += `- [${url}](${url})\n`;
+            });
+            markdown += "\n";
+          }
+        }
 
         return markdown;
       }
@@ -425,10 +448,8 @@ export default function Dashboard() {
     }
   }
 
-  
-
   return (
-    <div className="min-h-screen  ">
+    <div className="min-h-screen">
       <Navbar/>
 
       <main className="py-6 md:py-10 px-8 w-full">
@@ -437,8 +458,8 @@ export default function Dashboard() {
         ) : !resources ? (
           // Show PromptInput only when there's no data
           <div className="w-full pt-28 max-w-3xl mx-auto flex items-center justify-center flex-col">
-            <h2 className="text-4xl font-semibold pb-8 text-center text-slate-100">
-              What you want to learn?
+            <h2 className="text-5xl font-semibold pb-12 text-center text-slate-100">
+            What tech skill do you <br/>want to learn?
             </h2>
             <PromptInput
               value={topic}
@@ -486,63 +507,68 @@ export default function Dashboard() {
         ) : (
           // Show content when data is available
           <div className="container mx-auto">
-          {/* Add a back button to return to search */}
-          <Button 
-            variant="ghost" 
-            className="mb-6"
-            onClick={() => {
-              setResources("");
-              setTopic("");
-            }}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to search
-          </Button>
+            {/* Add a back button to return to search */}
+            <Button 
+              variant="ghost" 
+              className="mb-6"
+              onClick={() => {
+                setResources("");
+                setTopic("");
+              }}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to search
+            </Button>
 
-          <div className="space-y-8">
-            {/* YouTube section */}
-            <div className="space-y-6">
-              <h2 className="text-lg font-bold flex items-center gap-2 text-slate-100">
-                <Youtube className="h-5 w-5 text-red-500" />
-                Video Tutorials
-                {isLoading && (
-                  <span className="text-sm text-muted-foreground ml-2">
-                    (Loading...)
-                  </span>
-                )}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {youtubeLinks.length > 0 ? (
-                  youtubeLinks.map(({ url, thumbnail }) => (
-                    <a
-                      key={url}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group block space-y-2 transition-transform hover:scale-105"
-                    >
-                      <div className="relative overflow-hidden rounded-lg">
-                        <img
-                          src={thumbnail}
-                          alt="Video Thumbnail"
-                          className="w-full object-cover transition-transform group-hover:scale-110"
-                          style={{ aspectRatio: "16/9" }}
-                        />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity group-hover:opacity-100" />
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {/* {url.split("watch?v=")[1]} */}
-                      </p>
-                    </a>
-                  ))
-                ) : (
-                  <p className=" text-slate-200 col-span-3 text-center py-8">
-                    No video tutorials found. Try searching for a different
-                    topic.
-                  </p>
-                )}
+            <div className="space-y-8">
+              {/* YouTube section */}
+              <div className="space-y-6">
+                <h2 className="text-lg font-bold flex items-center gap-2 text-slate-100">
+                  <Youtube className="h-5 w-5 text-red-500" />
+                  Video Tutorials
+                  {isLoading && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      (Loading...)
+                    </span>
+                  )}
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                  {youtubeLinks.length > 0 ? (
+                    youtubeLinks.map(({ url, thumbnail }) => (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block space-y-2 transition-transform hover:scale-105"
+                      >
+                        <div className="relative overflow-hidden rounded-lg">
+                          <img
+                            src={thumbnail}
+                            alt="Video Thumbnail"
+                            className="w-full object-cover transition-transform group-hover:scale-110"
+                            style={{ aspectRatio: "16/9" }}
+                          />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                        </div>
+                        {/* <p className="text-sm text-muted-foreground truncate">
+                          {/* Extract video ID for display */}
+                          {/* {url.includes('watch?v=') 
+                            ? url.split('watch?v=')[1]
+                            : url.includes('youtu.be/')
+                              ? url.split('youtu.be/')[1]
+                              : url}
+                        </p> */} 
+                      </a>
+                    ))
+                  ) : (
+                    <p className="text-slate-200 col-span-3 text-center py-8">
+                      No video tutorials found. Try searching for a different
+                      topic.
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
 
             {/* GitHub section */}
             <div className="space-y-6">
@@ -555,7 +581,7 @@ export default function Dashboard() {
                   </span>
                 )}
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 {githubLinks.length > 0 ? (
                   githubLinks.map(({ url, thumbnail }) => (
                     <a
@@ -574,9 +600,9 @@ export default function Dashboard() {
                         />
                         <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity group-hover:opacity-100" />
                       </div>
-                      <p className="text-sm text-muted-foreground truncate">
+                      {/* <p className="text-sm text-muted-foreground truncate">
                         {url.split("github.com/")[1]}
-                      </p>
+                      </p> */}
                     </a>
                   ))
                 ) : (
@@ -591,9 +617,9 @@ export default function Dashboard() {
             {/* Roadmap card */}
             <Card className="overflow-hidden bg-background ">
               <Tabs defaultValue="formatted" className="w-full bg-roadmap-mesh">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="formatted">Formatted</TabsTrigger>
-                  <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-1">
+                  {/* <TabsTrigger value="formatted">Formatted</TabsTrigger> */}
+                  {/* <TabsTrigger value="roadmap">Roadmap</TabsTrigger> */}
                 </TabsList>
                 <TabsContent value="formatted" className="m-0">
                   <div className="p-6">
@@ -608,17 +634,17 @@ export default function Dashboard() {
                     {resources &&
                       typeof resources === "object" &&
                       "steps" in resources &&
-                      resources.steps.map((step) => (
-                        <StepCard
-                          key={step.id}
-                          id={step.id}
-                          title={step.title}
-                          duration={step.duration}
-                          description={step.description}
-                          resources={step.resources}
-                          practice={step.practice}
-                          validatedResources={step.validatedResources}
-                        />
+                      resources.steps.map((step: Step) => (
+                      <StepCard
+                        key={step.id}
+                        id={step.id}
+                        title={step.title}
+                        duration={step.duration}
+                        description={step.description}
+                        resources={step.resources}
+                        practice={step.practice}
+                        validatedResources={step.validatedResources}
+                      />
                       ))}
                     {/* ) : (
                  <pre className="bg-muted p-4 rounded-lg">
@@ -628,13 +654,13 @@ export default function Dashboard() {
                   </div>
                 </TabsContent>
               
-                <TabsContent value="roadmap" className="m-0">
+                {/* <TabsContent value="roadmap" className="m-0">
                   <div className="p-6">
                     <RoadmapView
-                      content={formatResourcesAsMarkdown(resources)}
+                      content={resources}
                     />
                   </div>
-                </TabsContent>
+                </TabsContent> */}
               </Tabs>
             </Card>
           </div>

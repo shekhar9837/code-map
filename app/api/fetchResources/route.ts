@@ -1,11 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import { tavily } from '@tavily/core';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const client = tavily({ apiKey: "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" });
 
 // ✅ Fetch YouTube video for a specific step title
 async function fetchYouTubeVideoForStep(stepTitle: string): Promise<string | null> {
@@ -52,19 +54,15 @@ interface BlogItem {
 
 async function fetchBlogArticles(query: string): Promise<string[]> {
   try {
-    const API_KEY = process.env.GOOGLE_SEARCH_API_KEY;
-    const CX = process.env.GOOGLE_CSE_ID;
-    const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${API_KEY}&cx=${CX}&num=5`;
+    const response = await client.search(query, {});
+    console.log("Tavily API Response:", response);
 
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.items) {
+    if (!response) {
       console.error("No blog articles found.");
       return []; // Return empty array to prevent undefined error
     }
 
-    return data.items.map((item: BlogItem) => item.link);
+    return response.results.map((item: { url: string }) => item.url);
   } catch (error) {
     console.error("Error fetching blog articles:", error);
     return [];
@@ -121,8 +119,8 @@ export async function POST(req: Request) {
     - Learning resources: [Title](URL)
     - Practice exercises
     - **Validated Resources**:
-      - GitHub Repositories: ${resources.github.map((url) => `- [Explore Here](${url})`).join("\n")}
-      - Blog Articles: ${resources.blogs.map((url) => `- [Read Here](${url})`).join("\n")}
+      - GitHub Repositories:- [Explore Here](url)}
+      - Blog Articles: - [Read Here](url)}
 
     IMPORTANT: Return ONLY a raw JSON object without any markdown formatting, code blocks, or backticks.
     The response must start with { and end with } and be valid JSON.
@@ -142,14 +140,12 @@ export async function POST(req: Request) {
     }`;
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    const result = await model.generateContentStream(prompt);
-    let text = '';
-    for await (const chunk of result.stream) {
-      text += chunk.text();
-    }
+    const result = await model.generateContent(prompt);
+    // console.log("Raw AI Response:", result); // Log the raw response
+
     let roadmap;
     try {
-      roadmap = JSON.parse(text);
+      roadmap = JSON.parse(result.response.text());
     } catch (error) {
       console.error("Failed to parse AI response:", error);
       return NextResponse.json({ error: "Failed to generate learning path" }, { status: 500 });
@@ -159,25 +155,24 @@ export async function POST(req: Request) {
       // ✅ Fetch YouTube videos for each step title
       for (const step of roadmap.steps) {
         const video = await fetchYouTubeVideoForStep(`${topic}` + step.title);
+
         if (video) {
           step.resources.push(`Video: [Watch Here](${video})`);
         }
       }
     }
+    console.log("✅ Learning Roadmap:", roadmap);
+    console.log("✅ Resources:", resources);
 
-    // ✅ Stream the updated roadmap response
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          controller.enqueue(JSON.stringify(roadmap));
-          controller.close();
-        } catch (error) {
-          controller.error(error);
-        }
-      },
-    });
-
-    return new Response(stream, { headers: { "Content-Type": "application/json" } });
+    // Return the updated roadmap response
+    return NextResponse.json(
+      {roadmap,
+      resources: {
+        github: resources.github,
+        blogs: resources.blogs
+      }
+      } ,
+      { headers: { "Content-Type": "application/json" } });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json({ error: "Failed to generate learning path" }, { status: 500 });
