@@ -62,6 +62,7 @@ function parseMarkdownLink(text: string) {
 
 // Function to convert string-based resources to object format
 function parseResourceStrings(resources: string[], type: string): Array<{ title: string; url: string }> {
+  console.log("Parsing resources:", { resources, type });
   return resources
     .filter(resource => resource.includes(`${type}:`))
     .map(resource => {
@@ -76,7 +77,9 @@ function parseResourceStrings(resources: string[], type: string): Array<{ title:
     });
 }
 
-const ResourceSection = ({ title, items }: { title: string; items: Array<{ title: string; url: string }> }) => (
+const ResourceSection = ({ title, items }: { title: string; items: Array<{ title: string; url: string }> }) =>
+    // console.log("ResourceSection Props:", { title, items }) || // Debugging log
+  (
   items && items.length > 0 && (
     <div className="mt-4">
       <h4 className="font-medium mb-2">{title}</h4>
@@ -100,7 +103,7 @@ const ResourceSection = ({ title, items }: { title: string; items: Array<{ title
 
 export function StepCard({ id, title, duration, description, resources, practice, validatedResources }: StepCardProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
-
+  console.log("StepCard Props:", { id, title, duration, description, resources, practice, validatedResources });
   // Handle different validatedResources formats
   let youtubeVideos: Array<{ title: string; url: string }> = [];
   let githubRepositories: Array<{ title: string; url: string }> = [];

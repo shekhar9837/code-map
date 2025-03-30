@@ -30,7 +30,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Github, Youtube } from "lucide-react";
+import { Book, Github, Youtube } from "lucide-react";
 import RoadmapView from "@/components/ui/roadmap-view";
 import axios from "axios";
 import { StepCard } from "@/components/ui/step-card";
@@ -93,6 +93,9 @@ export default function Dashboard() {
   const [youtubeLinks, setYoutubeLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
   const [githubLinks, setGithubLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
+
+  console.log("blogsLinks",  blogsLinks); // Debug log
 
   // Process the resources when they change
   useEffect(() => {
@@ -117,6 +120,10 @@ export default function Dashboard() {
     try {
       const response = await axios.post("/api/fetchResources", { topic });
       console.log("response", response.data);
+
+      setBlogsLinks(response.data.resources.blogs || []);
+      console.log("blogs", response.data.resources.blogs || []);
+      
       
       // Format the data to match our expected structure
       let result;
@@ -256,11 +263,9 @@ export default function Dashboard() {
           // Process blog links (some might be GitHub)
           if (data.resources.blogs && Array.isArray(data.resources.blogs)) {
             for (const url of data.resources.blogs) {
-              if (url.includes('github.com')) {
-                const thumbnail = await getGitHubThumbnail(url);
-                if (thumbnail) {
-                  githubLinks.push({ url, thumbnail });
-                }
+              const thumbnail = await getGitHubThumbnail(url);
+              if (thumbnail) {
+                blogsLinks.push({ url, thumbnail });
               }
             }
           }
@@ -276,19 +281,24 @@ export default function Dashboard() {
       const uniqueGithubLinks = Array.from(
         new Map(githubLinks.map((item) => [item.url, item])).values()
       );
+      // const uniqueBlogLinks = Array.from(
+      //   new Map(blogsLinks.map((item) => [item.url, item])).values()
+      // );
 
       console.log("Extracted links:", {
         youtubeLinks: uniqueYoutubeLinks.length,
         githubLinks: uniqueGithubLinks.length,
+        // blogLinks: uniqueBlogLinks.length
       });
 
       return {
         youtubeLinks: uniqueYoutubeLinks,
         githubLinks: uniqueGithubLinks,
+        // blogLinks: uniqueBlogLinks
       };
     } catch (e) {
       console.error("Error in extractLinks:", e);
-      return { youtubeLinks: [], githubLinks: [] };
+      return { youtubeLinks: [], githubLinks: []};
     }
   }
 
@@ -567,6 +577,49 @@ export default function Dashboard() {
                       topic.
                     </p>
                   )}
+                </div>
+              </div>
+              {/* Blogs section */}
+              <div className="space-y-6">
+                <h2 className="text-lg font-bold flex items-center gap-2 text-slate-100">
+                  <Book className="h-5 w-5 text-red-500" />
+                  Blogs to read
+                  {isLoading && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      (Loading...)
+                    </span>
+                  )}
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                    {blogsLinks.length > 0 ? (
+                    blogsLinks.map((item, index) => (
+                        <a
+                        key={index}
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block space-y-2 transition-transform hover:scale-105"
+                        >
+                        <div className="relative overflow-hidden rounded-lg  ">
+                          <img
+                          src={item.thumbnail || `https://s2.googleusercontent.com/s2/favicons?domain_url=${item.url}`}
+                          alt={item.thumbnail || `Blog Thumbnail ${index + 1}`}
+                          className="w-full object-cover transition-transform group-hover:scale-110"
+                          style={{ aspectRatio: "16/9" }}
+                          />
+                          {/* <p>Blog {index}</p> */}
+                          <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {item?.thumbnail }
+                        </p>
+                        </a>
+                    ))
+                    ) : (
+                    <p className="text-slate-200 col-span-3 text-center py-8">
+                      No blogs found. Try searching for a different topic.
+                    </p>
+                    )}
                 </div>
               </div>
 
