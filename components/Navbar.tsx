@@ -19,7 +19,7 @@ const Navbar = () => {
   };
   return (
     <header className="w-full backdrop-blur-xl  z-10">
-        <div className="container flex h-16 items-center justify-between py-4 px-4 mx-auto">
+        <div className="w-full flex h-16 items-center justify-between py-4 px-4">
           <div className="flex items-center gap-2  text-slate-100">
             <BookOpen className="h-6 w-6 " />
             <h1 className="text-xl font-bold">CodePath</h1>
