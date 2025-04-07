@@ -4,6 +4,18 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { tavily } from '@tavily/core';
 import { unstable_cache } from 'next/cache'; // Import Next.js caching
+import { withRateLimit } from "@/lib/rateLimiter";
+import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
+import { Redis } from "@upstash/redis"; // see below for cloudflare and fastly adapters
+
+// Create a new ratelimiter, that allows 10 requests per 10 seconds
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(), // Use Upstash Redis from environment variables
+  limiter: Ratelimit.slidingWindow(5, "5 h"),
+  analytics: true,
+  prefix: "@upstash/ratelimit",
+});
 
 // ======================
 // Environment Variable Checks (Optional but Recommended)
@@ -332,8 +344,22 @@ async function generateRoadmap(topic: string): Promise<RoadmapStep[]> {
 // Main API Route Handler
 // ======================
 
+
+// Define the handler function with proper Next.js types
 export async function POST(req: Request) {
+  const identifier = "api";
+  const { success } = await ratelimit.limit(identifier);
+
+  if (!success) {
+    console.warn("Rate limit exceeded for identifier:", identifier);
+    return NextResponse.json({
+      error:"Unable to process at this time"},
+      { status: 429 } // Too Many Requests
+    );
+  }
   let topic: string | undefined; // Define topic here to use in final error logging
+
+ 
 
   try {
     // 1. Parse and Validate Input
@@ -353,7 +379,7 @@ export async function POST(req: Request) {
     // 2. Fetch Resources in Parallel (Roadmap, GitHub, Blogs)
     const [githubRepos, blogArticles, roadmapSteps] = await Promise.all([
       fetchGitHubRepos(topic),
-      fetchBlogArticles(`beginner learning resources ${topic}`), // Refined blog search query
+      fetchBlogArticles(`${topic} learning resources from begineer for advance`), // Refined blog search query
       generateRoadmap(topic) // Generates the core steps or throws error
     ]);
 
