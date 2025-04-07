@@ -4,7 +4,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { tavily } from '@tavily/core';
 import { unstable_cache } from 'next/cache'; // Import Next.js caching
-import { withRateLimit } from "@/lib/rateLimiter";
 import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
 import { Redis } from "@upstash/redis"; // see below for cloudflare and fastly adapters
 
@@ -12,7 +11,7 @@ import { Redis } from "@upstash/redis"; // see below for cloudflare and fastly a
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(), // Use Upstash Redis from environment variables
-  limiter: Ratelimit.slidingWindow(5, "5 h"),
+  limiter: Ratelimit.slidingWindow(10, "5 h"),
   analytics: true,
   prefix: "@upstash/ratelimit",
 });
