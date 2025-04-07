@@ -11,7 +11,7 @@ import { Redis } from "@upstash/redis"; // see below for cloudflare and fastly a
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(), // Use Upstash Redis from environment variables
-  limiter: Ratelimit.slidingWindow(10, "5 h"),
+  limiter: Ratelimit.slidingWindow(5, "5 h"),
   analytics: true,
   prefix: "@upstash/ratelimit",
 });
