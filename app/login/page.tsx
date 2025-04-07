@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -33,7 +34,8 @@ export default function LoginPage() {
     })
 
     if (error) {
-      form.setError('root', { message: error.message })
+      toast.error(error.message || "An error occurred")
+      // form.setError('root', { message: error.message })
       return
     }
 
@@ -75,9 +77,10 @@ export default function LoginPage() {
                 )}
               />
               <Button className=" py-2 rounded-xl hover:scale-105 duration-300  font-medium" type="submit">Login</Button>
-              {form.formState.errors.root && (
-                <p className="text-red-500">{form.formState.errors.root.message}</p>
-              )}
+              {/* {form.formState.errors.root && ( */}
+                {/* // toast.error(form.formState.errors.root.message || "An error occurred") */}
+                {/* // <p className="text-red-500">{form.formState.errors.root.message}</p> */}
+              {/* )} */}
             </form>
           </Form>
 

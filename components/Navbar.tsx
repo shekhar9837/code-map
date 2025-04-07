@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 const Navbar = () => {
   const supabase = createClientComponentClient();
     const { user, loading } = useAuth();
+    console.log(user, loading)
     
     // Get user initials for avatar
   const getUserInitials = () => {
@@ -27,8 +28,8 @@ const Navbar = () => {
            <div className="flex items-center gap-4">
             <div className="hidden md:flex">
               <p className="text-sm  text-slate-200">
-                Signed in as {user?.user_metadata?.full_name} Shekhar
-                {/* Signed in as {user?.user_metadata.email} */}
+                {/* Signed in as {user?.user_metadata?.full_name}  */}
+               {user?.user_metadata.userName }
               </p>
             </div>
             <Avatar className="h-8 w-8 border">
@@ -36,7 +37,9 @@ const Navbar = () => {
                 src={user?.user_metadata?.avatar_url}
                 alt={user?.email || ""}
               />
-              <AvatarFallback>{getUserInitials()}</AvatarFallback>
+              <AvatarFallback>
+                {getUserInitials()}
+                </AvatarFallback>
             </Avatar>
             <Button onClick={handleLogout} variant="ghost" size="icon" className=' text-slate-100'>
               <LogOut className="h-5 w-5" />

@@ -10,18 +10,18 @@ export async function middleware(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
 
   // Protected routes
-  // if (req.nextUrl.pathname.startsWith('/dashboard')) {
-  //   if (!session) {
-  //     return NextResponse.redirect(new URL('/login', req.url))
-  //   }
-  // }
+  if (req.nextUrl.pathname.startsWith('/dashboard')) {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
+  }
 
-  // // Redirect to dashboard if user is already logged in and tries to access login/signup
-  // if (['/login', '/signup'].includes(req.nextUrl.pathname)) {
-  //   if (session) {
-  //     return NextResponse.redirect(new URL('/dashboard', req.url))
-  //   }
-  // }
+  // Redirect to dashboard if user is already logged in and tries to access login/signup
+  if (['/login', '/signup'].includes(req.nextUrl.pathname)) {
+    if (session) {
+      return NextResponse.redirect(new URL('/dashboard', req.url))
+    }
+  }
 
   return res
 }

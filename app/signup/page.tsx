@@ -82,10 +82,10 @@ export default function SignupPage() {
           <p className="text-sm mt-4 ">Create your Account here</p>
 
           <form onSubmit={form.handleSubmit(onSignup)} className="flex flex-col gap-4">
-            <input className="p-2 mt-8 rounded-xl border" type="text" placeholder="Enter your username..." {...form.register("userName")} />
-            <input className="p-2 rounded-xl border" type="email" placeholder="Enter your email" {...form.register("email")} />
+            <Input className="p-2 mt-8 rounded-xl border" type="text" placeholder="Enter your username..." {...form.register("userName")} />
+            <Input className="p-2 rounded-xl border" type="email" placeholder="Enter your email" {...form.register("email")} />
             <div className="relative">
-              <input className="p-2 rounded-xl border w-full" type="password" placeholder="Enter your password" {...form.register("password")} />
+              <Input className="p-2 rounded-xl border w-full" type="password" placeholder="Enter your password" {...form.register("password")} />
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" id="togglePassword"
                 className="bi bi-eye absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer z-20 opacity-100"
                 viewBox="0 0 16 16">
