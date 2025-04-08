@@ -42,7 +42,7 @@ export default function Home() {
   const [isSearching, setIsSearching] = useState(false);
   const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
 
-  const {loading, user}= useAuth();
+  const { loading, user } = useAuth();
 
   console.log("user", user); // Debug log
 
@@ -69,83 +69,83 @@ export default function Home() {
       window.location.href = "/login";
       return;
     }
-      setIsLoading(true);
-      setIsSearching(true);
+    setIsLoading(true);
+    setIsSearching(true);
+    setResources("");
+
+    try {
+      const response = await axios.post("/api/fetchResources", { topic });
+      console.log("response", response.data);
+
+      setBlogsLinks(response.data.resources.blogs || []);
+      console.log("blogs", response.data.resources.blogs || []);
+
+
+      // Format the data to match our expected structure
+      let result;
+      if (response.data && response.data.roadmap) {
+        // Handle the case where data is returned with a 'roadmap' key
+        result = {
+          steps: response.data.roadmap.steps,
+          resources: response.data.resources // Pass along the additional resources if present
+        };
+      } else {
+        // Handle direct data format
+        result = response.data;
+      }
+
+      // Set resources
+      setResources(result);
+
+      // Update recent topics
+      setRecentTopics((prev) => {
+        const newTopics = [topic, ...prev.filter((t) => t !== topic)].slice(0, 5);
+        return newTopics;
+      }
+      );
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+
+      // Get error message from axios error response if available
+      const errorMessage = axios.isAxiosError(error)
+        ? error.response?.data?.error || error.message
+        : "An error occurred while fetching resources.";
+
+      // Show error toast
+      toast.error(errorMessage);
+
+      // Set error in resources state
       setResources("");
-  
-      try {
-        const response = await axios.post("/api/fetchResources", { topic });
-        console.log("response", response.data);
-  
-        setBlogsLinks(response.data.resources.blogs || []);
-        console.log("blogs", response.data.resources.blogs || []);
-  
-  
-        // Format the data to match our expected structure
-        let result;
-        if (response.data && response.data.roadmap) {
-          // Handle the case where data is returned with a 'roadmap' key
-          result = {
-            steps: response.data.roadmap.steps,
-            resources: response.data.resources // Pass along the additional resources if present
-          };
-        } else {
-          // Handle direct data format
-          result = response.data;
-        }
-  
-        // Set resources
-        setResources(result);
-  
-        // Update recent topics
-        setRecentTopics((prev) => {
-          const newTopics = [topic, ...prev.filter((t) => t !== topic)].slice(0, 5);
-          return newTopics;
-        }
-        );
-        } catch (error) {
-          console.error("Error fetching resources:", error);
-          
-          // Get error message from axios error response if available
-          const errorMessage = axios.isAxiosError(error)
-          ? error.response?.data?.error || error.message
-          : "An error occurred while fetching resources.";
-          
-          // Show error toast
-          toast.error(errorMessage);
-          
-          // Set error in resources state
-          setResources("");
-      } finally {
-        setIsLoading(false);
-        setIsSearching(false);
-      }
+    } finally {
+      setIsLoading(false);
+      setIsSearching(false);
     }
-  
+  }
 
-    // Add a function to handle the submit action
-    // const handleSubmit = () => {
-    //   if (!user) {
-    //     toast.error("Please login to continue");
-    //     window.location.href = "/login";
-    //     return;
-    //   }
-    //   fetchResources(topic);
-    // };
 
-    // Add useEffect to check auth status on mount
-    useEffect(() => {
-      if (loading) return;
-      if (!user) {
-        // Optional: Redirect if trying to access directly
-        // window.location.href = "/login";
-      }
-    }, [user, loading]);
-  
+  // Add a function to handle the submit action
+  // const handleSubmit = () => {
+  //   if (!user) {
+  //     toast.error("Please login to continue");
+  //     window.location.href = "/login";
+  //     return;
+  //   }
+  //   fetchResources(topic);
+  // };
+
+  // Add useEffect to check auth status on mount
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      // Optional: Redirect if trying to access directly
+      window.location.href = "/login";
+    }
+  }, [user, loading]);
+
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
+    <div className="w-full">
+      {/* <Navbar /> */}
 
       <main className="py-6 md:py-10 px-8 w-full">
         {isLoading ? (
@@ -392,13 +392,7 @@ export default function Home() {
                     </div>
                   </TabsContent>
 
-                  {/* <TabsContent value="roadmap" className="m-0">
-                  <div className="p-6">
-                    <RoadmapView
-                      content={resources}
-                    />
-                  </div>
-                </TabsContent> */}
+                 
                 </Tabs>
               </Card>
             </div>

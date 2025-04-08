@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import toast, { Toaster } from 'react-hot-toast';
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { UserHistorySidebar } from "@/components/UserHistorySidebar"
+import { cookies } from "next/headers";
+import Navbar from "@/components/Navbar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,15 +28,24 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body
-      
-      >
-        {children}
-        <Toaster />
+  // const cookieStore = await cookies()
 
-      </body>
+  // const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <SidebarProvider defaultOpen={false}>
+        <UserHistorySidebar />
+        {/* <Navbar /> */}
+        <body>
+          <div className="p-2">
+
+          <SidebarTrigger />
+          </div>
+          {children}
+          <Toaster />
+        </body>
+      </SidebarProvider>
     </html>
   );
 }

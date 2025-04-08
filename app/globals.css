@@ -42,7 +42,9 @@
     --input: #282828;
     --ring: #0a950c;
     --radius: 0.5rem;
+    
   }
+  
 }
 
 @layer base {
