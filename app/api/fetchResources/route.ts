@@ -370,153 +370,157 @@ export async function POST(req: Request) {
 
 
 
-  
+
+  try {
+
+
+    let topic: string | undefined;
+
     try {
-    
+      // 1. Parse and Validate Input
+      const body = await req.json();
+      topic = body.topic; // Assign topic for logging purposes
 
-      let topic: string | undefined;
-
-      try {
-        // 1. Parse and Validate Input
-        const body = await req.json();
-        topic = body.topic; // Assign topic for logging purposes
-
-        if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
-          console.warn("Invalid topic received:", topic);
-          return NextResponse.json(
-            { error: "A valid 'topic' string is required in the request body." },
-            { status: 400 }
-          );
-        }
-        topic = topic.trim(); // Use trimmed topic
-        console.log(`Processing request for topic: "${topic}"`);
-
-        // 2. Fetch Resources in Parallel (Roadmap, GitHub, Blogs)
-        const [githubRepos, blogArticles, roadmapSteps] = await Promise.all([
-          fetchGitHubRepos(topic),
-          fetchBlogArticles(`${topic} learning resources from begineer for advance`), // Refined blog search query
-          generateRoadmap(topic) // Generates the core steps or throws error
-        ]);
-
-        // Check if roadmap generation resulted in steps (generateRoadmap throws on failure, but could return empty array)
-        if (!roadmapSteps || roadmapSteps.length === 0) {
-          console.error(`Roadmap generation succeeded but yielded no steps for topic: "${topic}".`);
-          // Consider this a server-side issue if steps are expected
-          return NextResponse.json(
-            { error: "Failed to generate meaningful roadmap steps. Please try a different topic or refine your query." },
-            { status: 500 } // Or 404 if topic genuinely yields nothing
-          );
-        }
-
-        console.log(`Generated ${roadmapSteps.length} steps. Fetching YouTube videos...`);
-
-        // 3. Enrich Steps with YouTube Videos (Parallel fetches per step)
-        const stepsWithVideos = await Promise.all(
-          roadmapSteps.map(async (step) => {
-            // Defensive copy to avoid modifying cached objects directly if caching steps becomes a thing
-            const enrichedStep = { ...step, resources: [...step.resources] };
-            try {
-              // More specific search query for YouTube
-              const videoSearchQuery = `${topic} ${step.title} tutorial for beginners`;
-              const videoUrl = await fetchYouTubeVideoForStep(videoSearchQuery);
-
-              if (videoUrl) {
-                // Add video link clearly formatted (Markdown is common)
-                enrichedStep.resources.push(`Video Tutorial: [Watch on YouTube](${videoUrl})`);
-              }
-            } catch (ytError) {
-              // Log specific error but don't fail the whole request
-              if (ytError instanceof Error) {
-                console.error(`Error fetching YouTube video for step "${step.title}":`, ytError.message);
-              }
-              // console.error(`Failed to fetch YouTube video for step "${step.title}":`, ytError.message);
-            }
-            return enrichedStep; // Return the step (with or without video)
-          })
+      if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
+        console.warn("Invalid topic received:", topic);
+        return NextResponse.json(
+          { error: "A valid 'topic' string is required in the request body." },
+          { status: 400 }
         );
-
-
-        // inside your handler — after stepsWithVideos is ready
-        try {
-          if (user?.id) {
-            const { error: insertError } = await supabase
-              .from('roadmap_history') // or 'user_history'
-              .insert([
-                {
-                  user_id: user.id,
-                  topic,
-                  steps_count: stepsWithVideos.length
-                }
-              ])
-
-            if (insertError) {
-              console.error('Error saving roadmap history:', insertError.message)
-              // Don't block the response if history fails to save
-            } else {
-              console.log('Roadmap history saved for user:', user.id)
-            }
-          } else {
-            console.warn('User ID missing, cannot save roadmap history.')
-          }
-        } catch (historyError) {
-          console.error('Unexpected error saving roadmap history:', historyError)
-        }
-
-
-        console.log(`Successfully processed and enriched request for topic: "${topic}"`);
-
-        // 4. Construct and Return Success Response
-        return NextResponse.json({
-          roadmap: { steps: stepsWithVideos },
-          resources: {
-            github: githubRepos,
-            blogs: blogArticles
-          }
-        }, {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            // Example cache control: public CDN cache for 1 hour, allow stale for 1 day
-            "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400"
-          }
-        });
-
-      } catch (error) {
-        // 5. Handle All Errors Gracefully
-        if (error instanceof Error) {
-          console.error(`API Error processing request (Topic: ${topic || 'Unknown'}):`, error);
-          // Determine status code based on error type if possible, default to 500
-          let statusCode = 500;
-          let errorMessage = "An internal server error occurred.";
-
-          // Customize based on common errors if needed
-          if (error.message.includes("Failed to generate or parse roadmap")) {
-            errorMessage = "Could not generate the learning roadmap. The AI might be unavailable or the topic too complex. Please try again later or refine your topic.";
-            statusCode = 503; // Service Unavailable might be appropriate
-          } else if (error instanceof SyntaxError && error.message.includes("JSON")) {
-            // This might catch errors from req.json()
-            errorMessage = "Invalid request format.";
-            statusCode = 400;
-          }
-
-          return NextResponse.json(
-            {
-              error: errorMessage,
-              // Include specific details only in non-production environments for security
-              details: process.env.NODE_ENV !== 'production' ? error.message : undefined
-            },
-            { status: statusCode }
-          );
-        }
       }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      return NextResponse.json({
-        error: "An unexpected error occurred."
-      }, { status: 500 });
-    }
+      topic = topic.trim(); // Use trimmed topic
+      console.log(`Processing request for topic: "${topic}"`);
 
-  
+      // 2. Fetch Resources in Parallel (Roadmap, GitHub, Blogs)
+      const [githubRepos, blogArticles, roadmapSteps] = await Promise.all([
+        fetchGitHubRepos(topic),
+        fetchBlogArticles(`${topic} learning resources from begineer for advance`), // Refined blog search query
+        generateRoadmap(topic) // Generates the core steps or throws error
+      ]);
+
+      // Check if roadmap generation resulted in steps (generateRoadmap throws on failure, but could return empty array)
+      if (!roadmapSteps || roadmapSteps.length === 0) {
+        console.error(`Roadmap generation succeeded but yielded no steps for topic: "${topic}".`);
+        // Consider this a server-side issue if steps are expected
+        return NextResponse.json(
+          { error: "Failed to generate meaningful roadmap steps. Please try a different topic or refine your query." },
+          { status: 500 } // Or 404 if topic genuinely yields nothing
+        );
+      }
+
+      console.log(`Generated ${roadmapSteps.length} steps. Fetching YouTube videos...`);
+
+      // 3. Enrich Steps with YouTube Videos (Parallel fetches per step)
+      const stepsWithVideos = await Promise.all(
+        roadmapSteps.map(async (step) => {
+          // Defensive copy to avoid modifying cached objects directly if caching steps becomes a thing
+          const enrichedStep = { ...step, resources: [...step.resources] };
+          try {
+            // More specific search query for YouTube
+            const videoSearchQuery = `${topic} ${step.title} tutorial for beginners`;
+            const videoUrl = await fetchYouTubeVideoForStep(videoSearchQuery);
+
+            if (videoUrl) {
+              // Add video link clearly formatted (Markdown is common)
+              enrichedStep.resources.push(`Video Tutorial: [Watch on YouTube](${videoUrl})`);
+            }
+          } catch (ytError) {
+            // Log specific error but don't fail the whole request
+            if (ytError instanceof Error) {
+              console.error(`Error fetching YouTube video for step "${step.title}":`, ytError.message);
+            }
+            // console.error(`Failed to fetch YouTube video for step "${step.title}":`, ytError.message);
+          }
+          return enrichedStep; // Return the step (with or without video)
+        })
+      );
+
+
+      // inside your handler — after stepsWithVideos is ready
+      try {
+        if (user?.id) {
+          const { error: insertError } = await supabase
+            .from('roadmap_history') // or 'user_history'
+            .insert([
+              {
+                user_id: user.id,
+                topic,
+                roadmap: { steps: stepsWithVideos },
+                resources: {
+                  github: githubRepos,
+                  blogs: blogArticles
+                }
+              }
+            ])
+
+          if (insertError) {
+            console.error('Error saving roadmap history:', insertError.message)
+            // Don't block the response if history fails to save
+          } else {
+            console.log('Roadmap history saved for user:', user.id)
+          }
+        } else {
+          console.warn('User ID missing, cannot save roadmap history.')
+        }
+      } catch (historyError) {
+        console.error('Unexpected error saving roadmap history:', historyError)
+      }
+
+
+      console.log(`Successfully processed and enriched request for topic: "${topic}"`);
+
+      // 4. Construct and Return Success Response
+      return NextResponse.json({
+        roadmap: { steps: stepsWithVideos },
+        resources: {
+          github: githubRepos,
+          blogs: blogArticles
+        }
+      }, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          // Example cache control: public CDN cache for 1 hour, allow stale for 1 day
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400"
+        }
+      });
+
+    } catch (error) {
+      // 5. Handle All Errors Gracefully
+      if (error instanceof Error) {
+        console.error(`API Error processing request (Topic: ${topic || 'Unknown'}):`, error);
+        // Determine status code based on error type if possible, default to 500
+        let statusCode = 500;
+        let errorMessage = "An internal server error occurred.";
+
+        // Customize based on common errors if needed
+        if (error.message.includes("Failed to generate or parse roadmap")) {
+          errorMessage = "Could not generate the learning roadmap. The AI might be unavailable or the topic too complex. Please try again later or refine your topic.";
+          statusCode = 503; // Service Unavailable might be appropriate
+        } else if (error instanceof SyntaxError && error.message.includes("JSON")) {
+          // This might catch errors from req.json()
+          errorMessage = "Invalid request format.";
+          statusCode = 400;
+        }
+
+        return NextResponse.json(
+          {
+            error: errorMessage,
+            // Include specific details only in non-production environments for security
+            details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+          },
+          { status: statusCode }
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return NextResponse.json({
+      error: "An unexpected error occurred."
+    }, { status: 500 });
+  }
+
+
 
 }
 
