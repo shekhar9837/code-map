@@ -34,18 +34,17 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <body>
+
       <SidebarProvider defaultOpen={false}>
         <UserHistorySidebar />
-        {/* <Navbar /> */}
-        <body>
-          <div className="p-2">
-
-          <SidebarTrigger />
-          </div>
-          {children}
+        <main className="w-full">
+          <Navbar />
           <Toaster />
-        </body>
+          {children}
+        </main>
       </SidebarProvider>
+      </body>
     </html>
   );
 }

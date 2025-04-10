@@ -66,7 +66,7 @@ export default function Home() {
   async function fetchResources(topic: string) {
     if (!user) {
       toast.error("Please login to continue");
-      window.location.href = "/login";
+      // window.location.href = "/login";
       return;
     }
     setIsLoading(true);
@@ -134,20 +134,18 @@ export default function Home() {
   // };
 
   // Add useEffect to check auth status on mount
-  useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      // Optional: Redirect if trying to access directly
-      window.location.href = "/login";
-    }
-  }, [user, loading]);
+  // useEffect(() => {
+  //   if (loading) return;
+  //   if (!user) {
+  //     // Optional: Redirect if trying to access directly
+  //     window.location.href = "/";
+  //   }
+  // }, [user, loading]);
 
 
   return (
-    <div className="w-full">
-      {/* <Navbar /> */}
-
-      <main className="py-6 md:py-10 px-8 w-full">
+    // <div className="w-full">
+      <main className="py-6 md:py-10 px-8 w-full ">
         {isLoading ? (
           <LoadingView />
         ) : !resources ? (
@@ -182,13 +180,13 @@ export default function Home() {
               </PromptInputActions>
             </PromptInput>
 
-            <div className="mt-8 flex md:flex-row flex-col flex-wrap gap-2 items-center justify-center">
+            <div className="mt-6 flex md:flex-row flex-col flex-wrap gap-2 items-center justify-center">
               <span className="text-sm text-slate-300">Popular searches: </span>
               {recentTopics.map((t) => (
                 <Badge
                   key={t}
                   variant="secondary"
-                  className="cursor-pointer px-8 py-2 mx-2 bg-transparent text-slate-100 border border-gray-700 gap-2 flex flex-wrap tracking-wider"
+                  className="cursor-pointer px-8 py-2 mx-1 bg-transparent text-slate-100 border border-gray-700 gap-2 flex flex-wrap tracking-wider"
                   onClick={() => {
                     setTopic(t);
                     fetchResources(t);
@@ -392,7 +390,7 @@ export default function Home() {
                     </div>
                   </TabsContent>
 
-                 
+
                 </Tabs>
               </Card>
             </div>
@@ -400,6 +398,6 @@ export default function Home() {
 
 
       </main>
-    </div>
+    // </div>
   );
 }

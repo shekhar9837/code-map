@@ -40,11 +40,11 @@ export default function LoginPage() {
     }
 
     router.refresh()
-    router.push('/dashboard') // or wherever you want to redirect after login
+    router.push('/') // or wherever you want to redirect after login
   }
 
   return (
-    <section className=" min-h-screen flex  justify-center items-center">
+    <section className="w-full py-10 flex  justify-center items-center">
       <div className="bg-card rounded-2xl flex max-w-3xl p-5 items-center">
         <div className="md:w-1/2 px-8">
           <h2 className="font-bold text-3xl ">Login</h2>

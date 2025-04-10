@@ -62,9 +62,9 @@ export function UserHistorySidebar() {
   return (
     // <SidebarProvider defaultOpen={false}>
     
-      <Sidebar className="bg-neutral-950" >
+      <Sidebar className="bg-neutral-900 border-neutral-900 border-0">
         <SidebarHeader>
-          <div className="flex items-center justify-between border-b pb-4 pt-2 px-2">
+          <div className="w-full flex items-center justify-between border-b pb-4 pt-3 px-2">
             <h2 className="text-lg font-semibold text-slate-100">Learning History</h2>
             <SidebarTrigger className="text-white" />
           </div>
