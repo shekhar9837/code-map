@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     
     // Get the current session to verify authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    console.log('Session:', session) // Debug log for session
+    // console.log('Session:', session) // Debug log for session
 
     if (sessionError || !session) {
       return NextResponse.json(
@@ -31,8 +31,8 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
       .range(start, start + limit - 1)
 
-    console.log('Query user_id:', session.user.id) // Debug log for user_id
-    console.log('History:', history) // Debug log for history
+    // console.log('Query user_id:', session.user.id) // Debug log for user_id
+    // console.log('History:', history) // Debug log for history
 
     if (historyError) {
       console.error('History fetch error:', historyError);

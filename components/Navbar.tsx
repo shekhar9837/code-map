@@ -10,7 +10,7 @@ import { SidebarTrigger } from './ui/sidebar'
 const Navbar = () => {
   const supabase = createClientComponentClient();
   const { user, loading } = useAuth();
-  console.log(user, loading)
+  // console.log(user, loading)
 
   // Get user initials for avatar
   const getUserInitials = () => {
