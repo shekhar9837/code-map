@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
+import { useAuth } from "@/hooks/useAuth"
 
 interface HistoryItem {
   id: string
@@ -38,6 +39,7 @@ export function UserHistorySidebar() {
     total: 0,
     totalPages: 0
   })
+  const { user } = useAuth()
 
   const fetchHistory = React.useCallback(async (page: number = 1) => {
     try {
@@ -70,9 +72,10 @@ export function UserHistorySidebar() {
     }
   }, [fetchHistory])
 
-  return (
-    // <SidebarProvider defaultOpen={false}>
+  // Don't render the sidebar if user is not authenticated
+  if (!user) return null;
 
+  return (
     <Sidebar className="bg-neutral-900 border-neutral-900 border-0">
       <SidebarHeader>
         <div className="w-full flex items-center justify-between border-b pb-4 pt-3 px-2">
