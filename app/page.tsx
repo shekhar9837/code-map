@@ -47,10 +47,8 @@ export default function Home() {
   const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
 
   const { loading, user } = useAuth();
+  console.log("resurces", resources); // Debug log
 
-  // console.log("user", user); // Debug log
-
-  // console.log("blogsLinks", blogsLinks); // Debug log
 
   // Process the resources when they change
   useEffect(() => {
@@ -82,7 +80,6 @@ export default function Home() {
       // console.log("response", response.data);
 
       setBlogsLinks(response.data.resources.blogs || []);
-      // console.log("blogs", response.data.resources.blogs || []);
 
 
       // Format the data to match our expected structure
@@ -127,24 +124,6 @@ export default function Home() {
   }
 
 
-  // Add a function to handle the submit action
-  // const handleSubmit = () => {
-  //   if (!user) {
-  //     toast.error("Please login to continue");
-  //     window.location.href = "/login";
-  //     return;
-  //   }
-  //   fetchResources(topic);
-  // };
-
-  // Add useEffect to check auth status on mount
-  // useEffect(() => {
-  //   if (loading) return;
-  //   if (!user) {
-  //     // Optional: Redirect if trying to access directly
-  //     window.location.href = "/";
-  //   }
-  // }, [user, loading]);
 
 
   return (

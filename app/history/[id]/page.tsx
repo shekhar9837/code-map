@@ -14,23 +14,9 @@ import toast from "react-hot-toast";
 import { extractLinks } from "@/lib/helper";
 import { set } from "react-hook-form";
 
-interface PaginationInfo {
-  page: number
-  limit: number
-  total: number
-  totalPages: number
-}
-
 export default function Page({ params }: { params: { id: string } }) {
-  const [history, setHistory] = useState<[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0
-  })
   const [resources, setResources] = useState<RoadmapData | string>("");
   const [youtubeLinks, setYoutubeLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
   const [githubLinks, setGithubLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
@@ -46,14 +32,16 @@ export default function Page({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     async function processYoutubeLinks() {
-      if (historyData) {
-        const { youtubeLinks, githubLinks } = await extractLinks(historyData);
-        setYoutubeLinks(youtubeLinks);
-        setGithubLinks(githubLinks);
-        console.log("Extracted links:", { youtubeLinks, githubLinks }); // Debug log
-      }
+      console.log("Processing Youtube Links", historyData); // Debug log
+      const { youtubeLinks, githubLinks } = await extractLinks(historyData);
+      setYoutubeLinks(youtubeLinks);
+      setGithubLinks(githubLinks);
+      console.log("Extracted links:", { youtubeLinks }); // Debug log
     }
-    processYoutubeLinks();
+    if (historyData) {
+      processYoutubeLinks();
+  }
+
   }, [historyData]);
 
   async function fetchHistory() {
@@ -97,8 +85,7 @@ export default function Page({ params }: { params: { id: string } }) {
       setIsSearching(false);
     }
   }
-  console.log('resources', resources)
-  console.log('historyData', historyData)
+
 
   if (isLoading) return <div className="py-6 md:py-10 px-8 w-full "><LoadingView /></div>
   if (error) return <div>Error: {error}</div>
@@ -106,48 +93,47 @@ export default function Page({ params }: { params: { id: string } }) {
   return (
     <div className="py-6 md:py-10 px-8 w-full ">
 
-      {/* <h1 className="text-2xl font-bold mb-4">Learning Path: {historyData?.topic}</h1> */}
       <div className="container mx-auto">
-          {/* Add a back button to return to search */}
-          <Button
-            variant="ghost"
-            className="mb-6"
-            onClick={() => {
-              setResources("");
-              setTopic("");
-            }}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to search
-          </Button>
+        {/* Add a back button to return to search */}
+        <Button
+          variant="ghost"
+          className="mb-6"
+          onClick={() => {
+            setResources("");
+            setTopic("");
+          }}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to search
+        </Button>
 
-          <div className="space-y-8">
-            {/* YouTube section */}
-            <YoutubeVideoCard
-              isLoading={isLoading}
-              youtubeLinks={youtubeLinks}
-            />
-            {/* Blogs section */}
-            <BlogsCard
-              isLoading={isLoading}
-              blogsLinks={blogsLinks}
-            />
+        <div className="space-y-8">
+          {/* YouTube section */}
+          <YoutubeVideoCard
+            isLoading={isLoading}
+            youtubeLinks={youtubeLinks}
+          />
+          {/* Blogs section */}
+          <BlogsCard
+            isLoading={isLoading}
+            blogsLinks={blogsLinks}
+          />
 
-            {/* GitHub section */}
-            <GithubCard
-              isLoading={isLoading}
-              githubLinks={githubLinks}
-            />
+          {/* GitHub section */}
+          <GithubCard
+            isLoading={isLoading}
+            githubLinks={githubLinks}
+          />
 
-            {/* Roadmap card */}
-            <RoadmapCard
-              topic={topic}
-              youtubeLinks={youtubeLinks}
-              githubLinks={githubLinks}
-              resources={resources}
-            />
-          </div>
+          {/* Roadmap card */}
+          <RoadmapCard
+            topic={topic}
+            youtubeLinks={youtubeLinks}
+            githubLinks={githubLinks}
+            resources={resources}
+          />
         </div>
+      </div>
     </div>
 
 
