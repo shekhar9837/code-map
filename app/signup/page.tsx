@@ -123,7 +123,7 @@ export default function SignupPage() {
             onClick={signUpWithGoogle}
           >
             <FcGoogle className="mr-2 h-4 w-4" />
-            Login with Google
+            Sign up with Google
           </Button>
           <div className="mt-10 text-sm border-b border-gray-500 py-5 playfair tooltip">Forget password?</div>
           <div className="mt-4 text-sm flex justify-between items-center container-mr">
