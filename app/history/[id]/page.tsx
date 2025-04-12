@@ -5,7 +5,7 @@ import LoadingView from "@/components/LoadingView";
 import RoadmapCard from "@/components/RoadmapCard";
 import { Button } from "@/components/ui/button";
 import YoutubeVideoCard from "@/components/YoutubeVideoCard";
-import { RoadmapData } from "@/lib/types";
+import { HistoryItem, RoadmapData } from "@/lib/types";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -23,8 +23,8 @@ export default function Page({ params }: { params: { id: string } }) {
   const [isSearching, setIsSearching] = useState(false);
   const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
   const [topic, setTopic] = useState("");
-  const [historyData, setHistoryData] = useState<any>(null);
-
+  const [historyData, setHistoryData] = useState<HistoryItem | null>(null);
+  console.log('historyData', historyData); // Debug log
 
   useEffect(() => {
     fetchHistory()
@@ -33,15 +33,19 @@ export default function Page({ params }: { params: { id: string } }) {
   useEffect(() => {
     async function processYoutubeLinks() {
       console.log("Processing Youtube Links", historyData); // Debug log
-      const { youtubeLinks, githubLinks } = await extractLinks(historyData);
-      setYoutubeLinks(youtubeLinks);
-      setGithubLinks(githubLinks);
-      console.log("Extracted links:", { youtubeLinks }); // Debug log
+      if (historyData?.roadmap) {
+        const { youtubeLinks, githubLinks } = await extractLinks({
+          steps: historyData.roadmap.steps,
+          resources: historyData.resources
+        });
+        setYoutubeLinks(youtubeLinks);
+        setGithubLinks(githubLinks);
+        console.log("Extracted links:", { youtubeLinks }); // Debug log
+      }
     }
     if (historyData) {
       processYoutubeLinks();
-  }
-
+    }
   }, [historyData]);
 
   async function fetchHistory() {

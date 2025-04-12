@@ -6,6 +6,7 @@ import { Button } from './ui/button'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useAuth } from '@/hooks/useAuth'
 import { SidebarTrigger } from './ui/sidebar'
+import Link from 'next/link'
 
 const Navbar = () => {
   const supabase = createClientComponentClient();
@@ -36,8 +37,10 @@ const Navbar = () => {
         )
         }
         <div className='gap-1 sm:gap-2 flex items-center'>
+        <Link href="/" className="flex items-center gap-2 sm:gap-4">
           <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
           <h1 className="text-base sm:text-lg font-semibold truncate">Code-map</h1>
+        </Link>
         </div>
         </div>
 

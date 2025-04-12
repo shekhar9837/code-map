@@ -104,6 +104,10 @@ export default function Home() {
         return newTopics;
       }
       );
+
+      // Dispatch event to update sidebar
+      window.dispatchEvent(new Event('historyUpdated'));
+      
     } catch (error) {
       console.error("Error fetching resources:", error);
 

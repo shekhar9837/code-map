@@ -21,3 +21,14 @@ export  interface RoadmapData {
       blogs?: string[];
     };
   }
+
+export interface HistoryItem {
+    id: string;
+    topic: string;
+    created_at: string;
+    roadmap?: RoadmapData;
+    resources?: {
+      github?: string[];
+      blogs?: string[];
+    };
+  }

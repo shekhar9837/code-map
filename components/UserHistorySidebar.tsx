@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useEffect } from "react"
 import { PanelLeft, Clock, ChevronLeft, ChevronRight } from "lucide-react"
 
 import {
@@ -45,7 +46,6 @@ export function UserHistorySidebar() {
       const response = await fetch(`/api/user-history?page=${page}&limit=${pagination.limit}`)
       if (!response.ok) throw new Error('Failed to fetch history')
       const data = await response.json()
-      // console.log(" history: ", data)
       setHistory(data.history)
       setPagination(data.pagination)
     } catch (err) {
@@ -55,9 +55,20 @@ export function UserHistorySidebar() {
     }
   }, [pagination.limit])
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchHistory()
-  }, [])
+
+    // Add event listener for history updates
+    const handleHistoryUpdate = () => {
+      fetchHistory()
+    }
+    window.addEventListener('historyUpdated', handleHistoryUpdate)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('historyUpdated', handleHistoryUpdate)
+    }
+  }, [fetchHistory])
 
   return (
     // <SidebarProvider defaultOpen={false}>
