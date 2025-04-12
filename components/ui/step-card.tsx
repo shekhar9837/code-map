@@ -62,7 +62,7 @@ function parseMarkdownLink(text: string) {
 
 // Function to convert string-based resources to object format
 function parseResourceStrings(resources: string[], type: string): Array<{ title: string; url: string }> {
-  console.log("Parsing resources:", { resources, type });
+  // console.log("Parsing resources:", { resources, type });
   return resources
     .filter(resource => resource.includes(`${type}:`))
     .map(resource => {
@@ -103,7 +103,7 @@ const ResourceSection = ({ title, items }: { title: string; items: Array<{ title
 
 export function StepCard({ id, title, duration, description, resources, practice, validatedResources }: StepCardProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  console.log("StepCard Props:", { id, title, duration, description, resources, practice, validatedResources });
+  // console.log("StepCard Props:", { id, title, duration, description, resources, practice, validatedResources });
   // Handle different validatedResources formats
   let youtubeVideos: Array<{ title: string; url: string }> = [];
   let githubRepositories: Array<{ title: string; url: string }> = [];

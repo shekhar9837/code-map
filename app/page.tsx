@@ -48,16 +48,16 @@ export default function Home() {
 
   const { loading, user } = useAuth();
 
-  console.log("user", user); // Debug log
+  // console.log("user", user); // Debug log
 
   // console.log("blogsLinks", blogsLinks); // Debug log
 
   // Process the resources when they change
   useEffect(() => {
     async function processLinks() {
-      console.log("Processing resources:", resources); // Debug log
+      // console.log("Processing resources:", resources); // Debug log
       const { youtubeLinks, githubLinks } = await extractLinks(resources);
-      console.log("Extracted links:", { youtubeLinks, githubLinks }); // Debug log
+      // console.log("Extracted links:", { youtubeLinks, githubLinks }); // Debug log
       setYoutubeLinks(youtubeLinks);
       setGithubLinks(githubLinks);
     }
@@ -79,10 +79,10 @@ export default function Home() {
 
     try {
       const response = await axios.post("/api/fetchResources", { topic });
-      console.log("response", response.data);
+      // console.log("response", response.data);
 
       setBlogsLinks(response.data.resources.blogs || []);
-      console.log("blogs", response.data.resources.blogs || []);
+      // console.log("blogs", response.data.resources.blogs || []);
 
 
       // Format the data to match our expected structure

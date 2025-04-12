@@ -1,91 +1,121 @@
 'use client'
 import BlogsCard from "@/components/BlogsCard";
 import GithubCard from "@/components/GithubCard";
+import LoadingView from "@/components/LoadingView";
 import RoadmapCard from "@/components/RoadmapCard";
 import { Button } from "@/components/ui/button";
 import YoutubeVideoCard from "@/components/YoutubeVideoCard";
 import { RoadmapData } from "@/lib/types";
+import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { extractLinks } from "@/lib/helper";
+import { set } from "react-hook-form";
 
 interface PaginationInfo {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
+  page: number
+  limit: number
+  total: number
+  totalPages: number
 }
 
 export default function Page({ params }: { params: { id: string } }) {
-    const [history, setHistory] = useState<[]>([])
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [pagination, setPagination] = useState<PaginationInfo>({
-        page: 1,
-        limit: 10,
-        total: 0,
-        totalPages: 0
-    })
-      const [resources, setResources] = useState<RoadmapData | string>("");
-      const [youtubeLinks, setYoutubeLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
-      const [githubLinks, setGithubLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
-      const [isSearching, setIsSearching] = useState(false);
-      const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
-      const [topic, setTopic] = useState("");
+  const [history, setHistory] = useState<[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  })
+  const [resources, setResources] = useState<RoadmapData | string>("");
+  const [youtubeLinks, setYoutubeLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
+  const [githubLinks, setGithubLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
+  const [topic, setTopic] = useState("");
+  const [historyData, setHistoryData] = useState<any>(null);
 
-    
-    useEffect(() => {
-        fetchHistory()
-    }, [])
 
-    const fetchHistory = async () => {
-        try {
-            setIsLoading(true)
-            setError(null)
-            const response = await fetch(`/api/user-history/${params.id}`)
-            if (!response.ok) throw new Error('Failed to fetch history')
-            const data = await response.json()
-            console.log(" history: ", data.history)
+  useEffect(() => {
+    fetchHistory()
+  }, [])
 
-            setHistory(data.history || [])
-            console.log(data.history?.resources?.blogs || []);
-            setBlogsLinks(data.history?.resources?.blogs || []);
-            let result;
-            if (data && data.roadmap) {
-              // Handle the case where data is returned with a 'roadmap' key
-              result = {
-                steps: data.roadmap.steps,
-                resources: data.resources // Pass along the additional resources if present
-              };
-            } else {
-              // Handle direct data format
-              result = data;
-            }
-      
-            // Set resources
-            setResources(result);
-
-        } catch (err) {
-            console.error("Error fetching history:", err)
-            setError(err instanceof Error ? err.message : 'Failed to load history')
-        } finally {
-            setIsLoading(false)
-        }
+  useEffect(() => {
+    async function processYoutubeLinks() {
+      if (historyData) {
+        const { youtubeLinks, githubLinks } = await extractLinks(historyData);
+        setYoutubeLinks(youtubeLinks);
+        setGithubLinks(githubLinks);
+        console.log("Extracted links:", { youtubeLinks, githubLinks }); // Debug log
+      }
     }
+    processYoutubeLinks();
+  }, [historyData]);
+
+  async function fetchHistory() {
+
+    setIsLoading(true);
+    setIsSearching(true);
+    setResources("");
+
+    try {
+      const response = await axios(`/api/user-history/${params.id}`)
+      const historyItem = response.data.history[0]; // Get the first history item
+      setHistoryData(historyItem);
+      console.log("historyItem", historyItem); // Debug log
+
+      // Format the data to match our expected structure
+      let result;
+      if (historyItem && historyItem.roadmap) {
+        // Handle the case where data is returned with a 'roadmap' key
+        result = {
+          steps: historyItem.roadmap?.steps,
+          resources: historyItem.resources // Pass along the additional resources if present
+        };
+      } else {
+        // Handle direct data format
+        result = historyItem;
+      }
+      // Set resources with roadmap data and null checks
+      setResources(result);
+      setBlogsLinks(historyItem.resources.blogs || []);
 
 
-    if (isLoading) return <div>Loading...</div>
-    if (error) return <div>Error: {error}</div>
+    } catch (error) {
+      console.error("Error fetching history:", error);
+      const errorMessage = axios.isAxiosError(error)
+        ? error.response?.data?.error || error.message
+        : "An error occurred while fetching history.";
+      toast.error(errorMessage);
+      setResources("");
+    } finally {
+      setIsLoading(false);
+      setIsSearching(false);
+    }
+  }
+  console.log('resources', resources)
+  console.log('historyData', historyData)
 
-    return (
-        <div>
-            <h1>History for ID: {params.id}</h1>
-            <div className="container mx-auto">
+  if (isLoading) return <div className="py-6 md:py-10 px-8 w-full "><LoadingView /></div>
+  if (error) return <div>Error: {error}</div>
+
+  return (
+    <div className="py-6 md:py-10 px-8 w-full ">
+
+      {/* <h1 className="text-2xl font-bold mb-4">Learning Path: {historyData?.topic}</h1> */}
+      <div className="container mx-auto">
           {/* Add a back button to return to search */}
           <Button
             variant="ghost"
             className="mb-6"
-            
+            onClick={() => {
+              setResources("");
+              setTopic("");
+            }}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to search
@@ -118,8 +148,8 @@ export default function Page({ params }: { params: { id: string } }) {
             />
           </div>
         </div>
-        
+    </div>
 
-        </div>
-    )
+
+  )
 }
