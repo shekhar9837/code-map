@@ -12,7 +12,7 @@ import { cookies } from 'next/headers';
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(), // Use Upstash Redis from environment variables
-  limiter: Ratelimit.slidingWindow(50, "5 h"),
+  limiter: Ratelimit.slidingWindow(5, "10 h"),
   analytics: true,
   prefix: "@upstash/ratelimit",
 });
@@ -111,7 +111,7 @@ async function fetchWithTimeout(
 
 const fetchYouTubeVideoForStep = unstable_cache(
   async (searchQuery: string): Promise<string | null> => {
-    console.log(`Cache miss or revalidating: Fetching YouTube video for: "${searchQuery}"`);
+    // console.log(`Cache miss or revalidating: Fetching YouTube video for: "${searchQuery}"`);
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) return null; // Don't attempt if key is missing
 
@@ -142,7 +142,7 @@ const fetchYouTubeVideoForStep = unstable_cache(
 
 const fetchGitHubRepos = unstable_cache(
   async (topic: string): Promise<string[]> => {
-    console.log(`Cache miss or revalidating: Fetching GitHub repos for: "${topic}"`);
+    // console.log(`Cache miss or revalidating: Fetching GitHub repos for: "${topic}"`);
     try {
       const query = `${encodeURIComponent(topic)} language:${encodeURIComponent(topic)} sort:stars`; // More focused query
       const url = `https://api.github.com/search/repositories?q=${query}&order=desc&per_page=3`; // Get top 3
@@ -180,7 +180,7 @@ interface BlogArticle {
 }
 const fetchBlogArticles = unstable_cache(
   async (query: string): Promise<BlogArticle[]> => {
-    console.log(`Cache miss or revalidating: Fetching blog articles for: "${query}"`);
+    // console.log(`Cache miss or revalidating: Fetching blog articles for: "${query}"`);
     try {
       // Tavily search function might handle its own retries/timeouts internally
       const response = await tavilyClient.search(query, {
@@ -189,7 +189,7 @@ const fetchBlogArticles = unstable_cache(
         include_domains: [],  // Optional: filter by domains
         exclude_domains: []   // Optional: filter out domains
       });
-      console.log("Tavily response:", response); // Log the response for debugging
+      // console.log("Tavily response:", response); // Log the response for debugging
 
       // Use optional chaining and check if 'results' is an array
       if (response?.results && Array.isArray(response.results)) {
@@ -202,7 +202,7 @@ const fetchBlogArticles = unstable_cache(
           }))
           .filter(item => item.url); // Filter out any items where URL couldn't be found/is empty
 
-        console.log(`Found ${articles.length} blog articles for "${query}"`);
+        // console.log(`Found ${articles.length} blog articles for "${query}"`);
         return articles; // Return the array of {title, url} objects
       } else {
         console.warn(`Tavily did not return valid results for query: "${query}"`);
@@ -273,7 +273,7 @@ async function generateRoadmap(topic: string): Promise<RoadmapStep[]> {
   let jsonString = '';
 
   try {
-    console.log(`Generating roadmap with Gemini for topic: "${topic}"`);
+    // console.log(`Generating roadmap with Gemini for topic: "${topic}"`);
     const result = await model.generateContent(prompt);
     rawResponseText = result.response.text();
 
@@ -285,7 +285,7 @@ async function generateRoadmap(topic: string): Promise<RoadmapStep[]> {
 
     if (match && match[1]) {
       jsonString = match[1].trim();
-      console.log("Extracted JSON string from Markdown code block.");
+      // console.log("Extracted JSON string from Markdown code block.");
     } else {
       // 2. If no block, assume the entire response *might* be JSON. Trim aggressively.
       jsonString = rawResponseText.trim();
@@ -297,13 +297,13 @@ async function generateRoadmap(topic: string): Promise<RoadmapStep[]> {
         const lastBrace = jsonString.lastIndexOf('}');
         if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
           jsonString = jsonString.substring(firstBrace, lastBrace + 1);
-          console.log("Attempted to extract JSON between first '{' and last '}'.");
+          // console.log("Attempted to extract JSON between first '{' and last '}'.");
         } else {
           console.error("Could not reliably extract JSON object from Gemini response.");
           // Even if we couldn't extract, try parsing `jsonString` as is, it might still work or fail gracefully below.
         }
       } else {
-        console.log("No Markdown block found. Assuming raw response is JSON.");
+        // console.log("No Markdown block found. Assuming raw response is JSON.");
       }
     }
 
@@ -322,7 +322,7 @@ async function generateRoadmap(topic: string): Promise<RoadmapStep[]> {
     }
 
 
-    console.log(`Successfully generated and parsed ${parsedData.steps.length} roadmap steps.`);
+    // console.log(`Successfully generated and parsed ${parsedData.steps.length} roadmap steps.`);
     return parsedData.steps; // Return the array of steps
 
   } catch (error) {
@@ -389,7 +389,7 @@ export async function POST(req: Request) {
         );
       }
       topic = topic.trim(); // Use trimmed topic
-      console.log(`Processing request for topic: "${topic}"`);
+      // console.log(`Processing request for topic: "${topic}"`);
 
       // 2. Fetch Resources in Parallel (Roadmap, GitHub, Blogs)
       const [githubRepos, blogArticles, roadmapSteps] = await Promise.all([
@@ -408,7 +408,7 @@ export async function POST(req: Request) {
         );
       }
 
-      console.log(`Generated ${roadmapSteps.length} steps. Fetching YouTube videos...`);
+      // console.log(`Generated ${roadmapSteps.length} steps. Fetching YouTube videos...`);
 
       // 3. Enrich Steps with YouTube Videos (Parallel fetches per step)
       const stepsWithVideos = await Promise.all(
@@ -457,7 +457,7 @@ export async function POST(req: Request) {
             console.error('Error saving roadmap history:', insertError.message)
             // Don't block the response if history fails to save
           } else {
-            console.log('Roadmap history saved for user:', user.id)
+            // console.log('Roadmap history saved for user:', user.id)
           }
         } else {
           console.warn('User ID missing, cannot save roadmap history.')
@@ -467,7 +467,7 @@ export async function POST(req: Request) {
       }
 
 
-      console.log(`Successfully processed and enriched request for topic: "${topic}"`);
+      // console.log(`Successfully processed and enriched request for topic: "${topic}"`);
 
       // 4. Construct and Return Success Response
       return NextResponse.json({

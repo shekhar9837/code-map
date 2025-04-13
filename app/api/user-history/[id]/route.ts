@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const id = params.id
-    console.log('Received ID:', id)
+    // console.log('Received ID:', id)
     try {
         const cookieStore = cookies()
         const supabase = createRouteHandlerClient({ cookies: () => cookieStore })

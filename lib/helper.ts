@@ -3,7 +3,7 @@ import { RoadmapData } from "./types";
   export async function extractLinks(data: RoadmapData | string) {
     try {
       if (!data) {
-        console.log("Empty data received");
+        // console.log("Empty data received");
         return { youtubeLinks: [], githubLinks: [] };
       }
 
@@ -18,18 +18,18 @@ import { RoadmapData } from "./types";
 
         for (const match of matches) {
           const url = match[2];
-          console.log("Processing URL:", url); // Debug log
+          // console.log("Processing URL:", url); // Debug log
 
           if (url.includes("youtube.com") || url.includes("youtu.be")) {
             const thumbnail = await getYouTubeThumbnail(url);
             if (thumbnail) {
-              console.log("Added YouTube link:", url);
+              // console.log("Added YouTube link:", url);
               youtubeLinks.push({ url, thumbnail });
             }
           } else if (url.includes("github.com")) {
             const thumbnail = await getGitHubThumbnail(url);
             if (thumbnail) {
-              console.log("Added GitHub link:", url);
+              // console.log("Added GitHub link:", url);
               githubLinks.push({ url, thumbnail });
             }
           }
@@ -38,7 +38,7 @@ import { RoadmapData } from "./types";
 
       // Process data based on format
       if (typeof data === "object") {
-        console.log("Processing roadmap data");
+        // console.log("Processing roadmap data");
 
         // Process steps if available
         if (data.steps && Array.isArray(data.steps)) {
@@ -62,7 +62,7 @@ import { RoadmapData } from "./types";
                       const url = match[2];
                       const thumbnail = await getGitHubThumbnail(url);
                       if (thumbnail) {
-                        console.log("Added validated GitHub link:", url);
+                        // console.log("Added validated GitHub link:", url);
                         githubLinks.push({ url, thumbnail });
                       }
                     }
@@ -70,7 +70,7 @@ import { RoadmapData } from "./types";
                     // Handle object format { title, url }
                     const thumbnail = await getGitHubThumbnail(repo.url);
                     if (thumbnail) {
-                      console.log("Added validated GitHub link:", repo.url);
+                      // console.log("Added validated GitHub link:", repo.url);
                       githubLinks.push({ url: repo.url, thumbnail });
                     }
                   }
@@ -96,7 +96,7 @@ import { RoadmapData } from "./types";
             for (const url of data.resources.github) {
               const thumbnail = await getGitHubThumbnail(url);
               if (thumbnail) {
-                console.log("Added additional GitHub link:", url);
+                // console.log("Added additional GitHub link:", url);
                 githubLinks.push({ url, thumbnail });
               }
             }
@@ -127,11 +127,11 @@ import { RoadmapData } from "./types";
       //   new Map(blogsLinks.map((item) => [item.url, item])).values()
       // );
 
-      console.log("Extracted links:", {
-        youtubeLinks: uniqueYoutubeLinks.length,
-        githubLinks: uniqueGithubLinks.length,
+      // console.log("Extracted links:", {
+        // youtubeLinks: uniqueYoutubeLinks.length,
+        // githubLinks: uniqueGithubLinks.length,
         // blogLinks: uniqueBlogLinks.length
-      });
+      // });
 
       return {
         youtubeLinks: uniqueYoutubeLinks,
@@ -147,7 +147,7 @@ import { RoadmapData } from "./types";
  export async function getYouTubeThumbnail(url: string) {
     try {
       if (!url) {
-        console.log("No URL provided");
+        // console.log("No URL provided");
         return null;
       }
 
@@ -155,7 +155,7 @@ import { RoadmapData } from "./types";
         /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/
       );
       if (!videoIdMatch) {
-        console.log("Invalid YouTube URL format:", url);
+        // console.log("Invalid YouTube URL format:", url);
         return null;
       }
 
@@ -172,13 +172,13 @@ import { RoadmapData } from "./types";
       );
 
       if (!response.ok) {
-        console.log("Failed to fetch video data:", url);
+        // console.log("Failed to fetch video data:", url);
         return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
       }
 
       const data = await response.json();
       if (!data.items || data.items.length === 0) {
-        console.log("Video not found or unavailable:", url);
+        // console.log("Video not found or unavailable:", url);
         return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
       }
 
@@ -193,7 +193,7 @@ import { RoadmapData } from "./types";
     try {
       const repoPath = url.replace("https://github.com/", "");
       if (!repoPath || repoPath === url) {
-        console.log("Invalid GitHub URL format:", url);
+        // console.log("Invalid GitHub URL format:", url);
         return null;
       }
 
@@ -217,7 +217,7 @@ import { RoadmapData } from "./types";
       );
 
       if (!response.ok) {
-        console.log("Failed to fetch repository data:", url);
+        // console.log("Failed to fetch repository data:", url);
         return `https://opengraph.githubassets.com/1/${repoPath}`;
       }
 

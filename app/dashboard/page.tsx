@@ -46,9 +46,9 @@ export default function Dashboard() {
   // Process the resources when they change
   useEffect(() => {
     async function processLinks() {
-      console.log("Processing resources:", resources); // Debug log
+      // console.log("Processing resources:", resources); // Debug log
       const { youtubeLinks, githubLinks } = await extractLinks(resources);
-      console.log("Extracted links:", { youtubeLinks, githubLinks }); // Debug log
+      // console.log("Extracted links:", { youtubeLinks, githubLinks }); // Debug log
       setYoutubeLinks(youtubeLinks);
       setGithubLinks(githubLinks);
     }
@@ -65,7 +65,7 @@ export default function Dashboard() {
   
       try {
         const response = await axios.post("/api/fetchResources", { topic });
-        console.log("response", response.data);
+        // console.log("response", response.data);
   
         setBlogsLinks(response.data.resources.blogs || []);
         console.log("blogs", response.data.resources.blogs || []);

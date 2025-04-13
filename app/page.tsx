@@ -47,7 +47,7 @@ export default function Home() {
   const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
 
   const { loading, user } = useAuth();
-  console.log("resurces", resources); // Debug log
+  // console.log("resurces", resources); // Debug log
 
 
   // Process the resources when they change

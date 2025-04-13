@@ -34,7 +34,7 @@ export interface RoadmapViewProps {
 }
 
 const RoadmapView: React.FC<RoadmapViewProps> = ({ content }) => {
-  console.log('RoadmapView content:', content);
+  // console.log('RoadmapView content:', content);
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     if (node.data.type === 'YouTube' && node.data.label) {
@@ -103,8 +103,8 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ content }) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   // Debug logs to check nodes and edges data
-  console.log('Nodes:', nodes);
-  console.log('Edges:', edges);
+  // console.log('Nodes:', nodes);
+  // console.log('Edges:', edges);
 
   return (
     <div className="w-full h-[600px]">
