@@ -17,6 +17,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { FcGoogle } from 'react-icons/fc'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 const formSchema = z.object({
   userName: z.string().min(3, {
@@ -65,12 +66,13 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+        redirectTo: process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
       }
     })
 
     if (error) {
       console.error('Error signing up with Google:', error.message)
+      toast.error('Failed to sign in with Google')
     }
   }
 
