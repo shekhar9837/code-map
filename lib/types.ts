@@ -32,3 +32,19 @@ export interface HistoryItem {
       blogs?: string[];
     };
   }
+
+  // Interfaces
+// ======================
+export interface RoadmapStep {
+  id: string;
+  title: string;
+  duration: string;
+  description: string;
+  resources: string[]; // Initially generated strings, later potentially modified
+  practice: string[];
+}
+
+// Structure expected directly from Gemini (before parsing)
+export interface GeminiRoadmapResponse {
+  steps: RoadmapStep[];
+}
