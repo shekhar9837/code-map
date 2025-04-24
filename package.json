@@ -1,6 +1,6 @@
 {
   "name": "code-map",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -63,7 +63,7 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   },
-  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+  "description": "A personalized learning roadmap generator for programming topics with curated resources including GitHub repositories, blog articles, and YouTube videos.",
   "main": "index.js",
   "directories": {
     "lib": "lib"
@@ -72,8 +72,17 @@
     "type": "git",
     "url": "git+https://github.com/shekhar9837/code-map.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "programming",
+    "learning",
+    "roadmap",
+    "education",
+    "tutorials",
+    "resources",
+    "nextjs",
+    "supabase"
+  ],
+  "author": "Shekhar",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/shekhar9837/code-map/issues"

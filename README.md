@@ -1,68 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CodeMap - Your Personal Learning Roadmap
+
+CodeMap is an intelligent learning platform that creates personalized roadmaps for programming topics. It curates high-quality resources including GitHub repositories, blog articles, and YouTube videos to help you master any programming concept effectively.
+
+## Features
+
+- 🎯 Generate personalized learning roadmaps for any programming topic
+- 📚 Get curated resources from multiple sources:
+  - GitHub repositories with practical examples
+  - Blog articles for in-depth understanding
+  - YouTube videos for visual learning
+- 🔒 Secure authentication with Supabase
+- 📱 Responsive design for all devices
+- 🌙 Dark mode support
+- 📊 Track your learning progress
+- 💾 Save and revisit your roadmaps
 
 ## Getting Started
 
-First, run the development server:
+First, set up your environment variables by copying `.env.example` to `.env`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Fill in the required environment variables:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+- `GEMINI_API_KEY`: Google's Gemini AI API key
+- `YOUTUBE_API_KEY`: YouTube Data API key
+- `GITHUB_TOKEN`: GitHub Personal Access Token
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and fill in the required environment variables. Do not commit your `.env` file.
-
-## Installation
-
-Install dependencies:
+Then install dependencies and run the development server:
 
 ```bash
 npm install
-```
-
-## Usage
-
-Start the development server:
-
-```bash
 npm run dev
 ```
 
+Open [http://localhost:3000](http://localhost:3000) in your browser to start using CodeMap.
+
+## Tech Stack
+
+- **Framework**: Next.js 14 with App Router
+- **Database & Auth**: Supabase
+- **Styling**: Tailwind CSS
+- **AI Integration**: Google Gemini
+- **Form Handling**: React Hook Form with Zod
+- **UI Components**: Radix UI
+- **API Integration**: YouTube Data API, GitHub API
+
+## Deployment
+
+The application is deployed on Vercel. The production version is available at:
+[https://code-map.shekharcodes.tech](https://code-map.shekharcodes.tech)
+
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request. Make sure to follow the code style and add tests where appropriate.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the ISC License. See the LICENSE file for details.
+This project is licensed under the ISC License.
 
-## Security
+## Author
 
-Do not expose sensitive keys or credentials. Ensure your `.env` file is not committed. If you find a security issue, please report it privately.
+Created by Shekhar
