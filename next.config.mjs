@@ -38,13 +38,7 @@ const nextConfig = {
         }
       ]
     }
-  ],
-  metadata: {
-    manifest: '/manifest.json',
-    icons: {
-      icon: '/favicon.ico'
-    }
-  }
+  ]
 };
 
 export default nextConfig;
