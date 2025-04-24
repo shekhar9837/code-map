@@ -63,16 +63,28 @@ export default function SignupPage() {
   }
 
   const signUpWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: process.env.NEXT_PUBLIC_SITE_URL
-      }
-    })
+    try {
+      setIsLoading(true)
+      setError('')
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          },
+          redirectTo: process.env.NEXT_PUBLIC_SITE_URL 
+            ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/`
+            : `${window.location.origin}/auth/callback?next=/`
+        }
+      })
 
-    if (error) {
-      console.error('Error signing up with Google:', error.message)
+      if (error) throw error
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to sign in with Google')
       toast.error('Failed to sign in with Google')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -123,9 +135,10 @@ export default function SignupPage() {
             variant="outline" 
             className=" border py-2 w-full rounded-xl mt-5 flex justify-center items-center text-sm hover:scale-105 duration-300 hover:bg-[#60a8bc4f] font-medium" 
             onClick={signUpWithGoogle}
+            disabled={isLoading}
           >
             <FcGoogle className="mr-2 h-4 w-4" />
-            Sign up with Google
+            {isLoading ? 'Signing up with Google...' : 'Sign up with Google'}
           </Button>
           <div className="mt-10 text-sm border-b border-gray-500 py-5 playfair tooltip">Forget password?</div>
           <div className="mt-4 text-sm flex justify-between items-center container-mr">

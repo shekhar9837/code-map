@@ -9,23 +9,23 @@ export async function middleware(req: NextRequest) {
   // Refresh session if expired - required for Server Components
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Protected routes
-  // if (req.nextUrl.pathname.startsWith('/dashboard')) {
-  //   if (!session) {
-  //     return NextResponse.redirect(new URL('/login', req.url))
-  //   }
-  // }
+  // Protected routes that require authentication
+  if (req.nextUrl.pathname.startsWith('/private')) {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
+  }
 
-  // Redirect to dashboard if user is already logged in and tries to access login/signup
-  // if (['/login', '/signup'].includes(req.nextUrl.pathname)) {
-  //   if (session) {
-  //     return NextResponse.redirect(new URL('/dashboard', req.url))
-  //   }
-  // }
+  // Redirect to home if user is already logged in and tries to access login/signup
+  if (['/login', '/signup'].includes(req.nextUrl.pathname)) {
+    if (session) {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
+  }
 
   return res
 }
 
 export const config = {
-  matcher: ['/:path*', '/login', '/signup']
+  matcher: ['/:path*', '/login', '/signup', '/private']
 }
