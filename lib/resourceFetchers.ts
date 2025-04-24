@@ -1,10 +1,16 @@
 import { unstable_cache } from 'next/cache';
 import { tavily } from '@tavily/core';
 
-// Define an interface for the structure you want to return
+// Define interfaces for the API responses
 export interface BlogArticle {
   title: string;
   url: string;
+}
+
+interface TavilySearchResult {
+  title: string;
+  url: string;
+  [key: string]: unknown;  // Allow other properties from the API
 }
 
 export const fetchYouTubeVideoForStep = unstable_cache(
@@ -70,7 +76,7 @@ export const fetchBlogArticles = unstable_cache(
       });
       if (response?.results && Array.isArray(response.results)) {
         const articles: BlogArticle[] = response.results
-          .map((item: any) => ({
+          .map((item: TavilySearchResult) => ({
             title: typeof item.title === 'string' ? item.title : 'Untitled',
             url: typeof item.url === 'string' ? item.url : '',
           }))

@@ -1,8 +1,10 @@
-import { fetchYouTubeVideoForStep, fetchGitHubRepos, fetchBlogArticles } from "./resourceFetchers";
+import { fetchYouTubeVideoForStep, fetchGitHubRepos, fetchBlogArticles, BlogArticle } from "./resourceFetchers";
 import { generateRoadmap } from "./roadmapGenerator";
 import { NextResponse } from "next/server";
+import { RoadmapStep, RoadmapData } from "./types";
+import { SupabaseClient, User } from '@supabase/supabase-js';
 
-export async function validateTopicInput(req: Request): Promise<{ topic: string } | { error: any }> {
+export async function validateTopicInput(req: Request): Promise<{ topic: string } | { error: NextResponse }> {
   try {
     const body = await req.json();
     const topic = body.topic;
@@ -15,15 +17,20 @@ export async function validateTopicInput(req: Request): Promise<{ topic: string 
   }
 }
 
-export async function fetchAllResources(topic: string) {
-  return Promise.all([
+export async function fetchAllResources(topic: string): Promise<[string[], string[], RoadmapStep[]]> {
+  const [githubRepos, blogArticles, roadmapSteps] = await Promise.all([
     fetchGitHubRepos(topic),
     fetchBlogArticles(`${topic} learning resources from begineer for advance`),
     generateRoadmap(topic)
   ]);
+
+  // Convert BlogArticle[] to string[]
+  const blogUrls = blogArticles.map(article => article.url);
+  
+  return [githubRepos, blogUrls, roadmapSteps];
 }
 
-export async function enrichStepsWithYouTube(topic: string, roadmapSteps: any[]) {
+export async function enrichStepsWithYouTube(topic: string, roadmapSteps: RoadmapStep[]): Promise<RoadmapStep[]> {
   return Promise.all(
     roadmapSteps.map(async (step) => {
       const enrichedStep = { ...step, resources: [...step.resources] };
@@ -41,7 +48,14 @@ export async function enrichStepsWithYouTube(topic: string, roadmapSteps: any[])
   );
 }
 
-export async function saveRoadmapHistory(supabase: any, user: any, topic: string, stepsWithVideos: any[], githubRepos: any, blogArticles: any) {
+export async function saveRoadmapHistory(
+  supabase: SupabaseClient,
+  user: User | null,
+  topic: string,
+  stepsWithVideos: RoadmapStep[],
+  githubRepos: string[],
+  blogArticles: string[]
+): Promise<void> {
   try {
     if (user?.id) {
       const { error: insertError } = await supabase
