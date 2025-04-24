@@ -30,10 +30,10 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${requestUrl.origin}/login?error=${encodeURIComponent(error.message)}`)
       }
 
-      // Get the current origin
-      const origin = requestUrl.origin
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      const baseUrl = forwardedHost ? `https://${forwardedHost}` : origin
+      // Get the production URL from headers or fallback to request origin
+      const host = request.headers.get('host') || ''
+      const protocol = host.includes('localhost') ? 'http' : 'https'
+      const baseUrl = `${protocol}://${host}`
 
       return NextResponse.redirect(`${baseUrl}${next}`)
     } catch (error) {
