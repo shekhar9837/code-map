@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from '@/components/ui/input'
+// import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+// import { Input } from '@/components/ui/input'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -67,7 +67,7 @@ export default function LoginPage() {
         <div className="md:w-1/2 px-8">
           <h2 className="font-bold text-2xl">Login</h2>
           <p className="text-sm mt-4">If you already have an account, easily log in</p>
-          <Form {...form}>
+          {/* <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-8">
               <FormField
                 control={form.control}
@@ -102,7 +102,7 @@ export default function LoginPage() {
             <hr className="border-gray-400" />
             <p className="text-center text-sm">OR</p>
             <hr className="border-gray-400" />
-          </div>
+          </div> */}
           <Button onClick={signInWithGoogle} variant="outline" className="w-full mt-5 gap-2">
             <FcGoogle className="text-2xl" />
             Login with Google

@@ -4,8 +4,8 @@ import { signup } from './actions'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from '@/components/ui/input'
+// import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+// import { Input } from '@/components/ui/input'
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { FcGoogle } from 'react-icons/fc'
@@ -88,7 +88,7 @@ export default function SignupPage() {
           <h2 className="font-bold text-2xl">Sign Up</h2>
           <p className="text-sm mt-4">Create an account to get started</p>
 
-          <Form {...form}>
+          {/* <Form {...form}>
             <form onSubmit={form.handleSubmit(onSignup)} className="space-y-4 mt-8">
               <FormField
                 control={form.control}
@@ -139,7 +139,7 @@ export default function SignupPage() {
             <hr className="border-gray-400" />
             <p className="text-center text-sm">OR</p>
             <hr className="border-gray-400" />
-          </div>
+          </div> */}
 
           <Button onClick={signUpWithGoogle} variant="outline" className="w-full mt-5 gap-2" disabled={isLoading}>
             <FcGoogle className="text-2xl" />
