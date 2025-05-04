@@ -6,7 +6,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { UserHistorySidebar } from "@/components/UserHistorySidebar"
 import { cookies } from "next/headers";
 import Navbar from "@/components/Navbar";
-
+import { Analytics } from "@vercel/analytics/react"
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -101,6 +101,7 @@ export default function RootLayout({
           <Navbar />
           <Toaster />
           {children}
+         < Analytics/>
         </main>
       </SidebarProvider>
       </body>
