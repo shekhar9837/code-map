@@ -1,13 +1,13 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { ratelimit } from '@/lib/rateLimit'
+import { authRateLimit } from '@/lib/rateLimit'
 
 export async function GET(request: Request) {
   try {
     // Apply rate limiting
     const identifier = request.headers.get('x-real-ip') || 'api'
-    const { success } = await ratelimit.limit(identifier)
+    const { success } = await authRateLimit.limit(identifier)
     
     if (!success) {
       return NextResponse.json(
