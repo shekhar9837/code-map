@@ -5,8 +5,10 @@ import { authRateLimit } from '@/lib/rateLimit'
 
 export async function GET(request: Request) {
   try {
+    //  extract the client ip adress
+    const ip= request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     // Apply rate limiting
-    const identifier = request.headers.get('x-real-ip') || 'api'
+    const identifier = ip;
     const { success } = await authRateLimit.limit(identifier)
     
     if (!success) {

@@ -6,7 +6,8 @@ import { ratelimit } from "@/lib/rateLimit";
 import { validateTopicInput, fetchAllResources, enrichStepsWithYouTube, saveRoadmapHistory } from "@/lib/apiResourceHelpers";
 
 export async function POST(req: Request) {
-  const identifier = "api";
+  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+  const identifier = ip;
   const { success } = await ratelimit.limit(identifier);
   if (!success) {
     console.warn("Rate limit exceeded for identifier:", identifier);
