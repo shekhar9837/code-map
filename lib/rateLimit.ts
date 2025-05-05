@@ -4,12 +4,12 @@ import { Redis } from "@upstash/redis";
 export const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
    limiter: Ratelimit.slidingWindow(10, "10 s"), analytics: true,
-  prefix: "@upstash/ratelimit",
+  prefix: "@upstash/ratelimit:general",
 });
 
 export const authRateLimit = new Ratelimit({
   redis: Redis.fromEnv(),
    limiter: Ratelimit.slidingWindow(30, "1 m"), analytics: true,
-  prefix: "@upstash/ratelimit",
+  prefix: "@upstash/ratelimit:auth",
 });
 
