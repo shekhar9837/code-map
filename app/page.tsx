@@ -28,7 +28,6 @@ import BlogsCard from "@/components/BlogsCard";
 import GithubCard from "@/components/GithubCard";
 import RoadmapCard from "@/components/RoadmapCard";
 
-
 export default function Home() {
   const [topic, setTopic] = useState("");
   const [isLoading, setIsLoading] = useState(false);
