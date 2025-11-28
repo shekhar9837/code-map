@@ -35,6 +35,7 @@ const RoadmapCard = ({topic, youtubeLinks, githubLinks, resources}) => {
                                     resources={step.resources}
                                     practice={step.practice}
                                     validatedResources={step.validatedResources}
+                                    videoUrl={step.videoUrl}
                                 />
                             ))}
 

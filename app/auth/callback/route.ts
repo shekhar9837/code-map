@@ -1,50 +1,30 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-import { authRateLimit } from '@/lib/rateLimit'
+import { NextResponse } from 'next/server';
+import { withRateLimit } from '@/middleware/rateLimit';
+import { AuthService } from '@/lib/services/auth.service';
+import { getLoginUrl } from '@/constants/urls';
+import { AUTH } from '@/constants/messages';
 
 export async function GET(request: Request) {
-  try {
-    //  extract the client ip adress
-    const ip= request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-    // Apply rate limiting
-    const identifier = ip;
-    const { success } = await authRateLimit.limit(identifier)
-    
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
-        { status: 429 }
-      )
-    }
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get('code');
+  const next = requestUrl.searchParams.get('next') ?? '/';
 
-    const requestUrl = new URL(request.url)
-    const code = requestUrl.searchParams.get('code')
-    const next = requestUrl.searchParams.get('next') ?? '/'
-
-    if (code) {
-      const cookieStore = cookies()
-      const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-
-      try {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        
-        if (error) {
-          console.error('Auth error:', error)
-          return NextResponse.redirect(`https://codemap.shekharcodes.tech/login?error=${encodeURIComponent(error.message)}`)
-        }
-
-        // Always redirect to the production URL
-        return NextResponse.redirect(`https://codemap.shekharcodes.tech${next}`)
-      } catch (error) {
-        console.error('OAuth error:', error)
-        return NextResponse.redirect(`https://codemap.shekharcodes.tech/login?error=${encodeURIComponent('Authentication failed')}`)
+  const handler = async (req: Request) => {
+    try {
+      if (!code) {
+        return NextResponse.redirect(getLoginUrl(AUTH.ERROR.AUTH_FAILED));
       }
-    }
 
-    return NextResponse.redirect('https://codemap.shekharcodes.tech/login')
-  } catch (error) {
-    console.error('Callback error:', error)
-    return NextResponse.redirect('https://codemap.shekharcodes.tech/login?error=unexpected_error')
-  }
+      const authService = AuthService.getInstance();
+      const redirectUrl = await authService.handleOAuthCallback(code, next);
+      return NextResponse.redirect(redirectUrl);
+      
+    } catch (error) {
+      console.error('Auth callback error:', error);
+      const errorMessage = error instanceof Error ? error.message : AUTH.ERROR.UNEXPECTED_ERROR;
+      return NextResponse.redirect(getLoginUrl(errorMessage));
+    }
+  };
+
+  return withRateLimit(request, handler);
 }

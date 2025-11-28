@@ -101,69 +101,73 @@ const ResourceSection = ({ title, items }: { title: string; items: Array<{ title
   )
 );
 
-export function StepCard({ id, title, duration, description, resources, practice, validatedResources }: StepCardProps) {
+interface StepData {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  videoUrl?: string;
+  // Add other fields that might be present in your step data
+}
+
+export function StepCard({ 
+  id, 
+  title, 
+  duration, 
+  description, 
+  resources = [], 
+  practice = [], 
+  validatedResources = {},
+  videoUrl // Add videoUrl to the props
+}: StepCardProps & { videoUrl?: string }) {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  // console.log("StepCard Props:", { id, title, duration, description, resources, practice, validatedResources });
-  // Handle different validatedResources formats
-  let youtubeVideos: Array<{ title: string; url: string }> = [];
-  let githubRepositories: Array<{ title: string; url: string }> = [];
-  let blogArticles: Array<{ title: string; url: string }> = [];
-
-  // Check if validatedResources exists and has the expected properties
-  if (validatedResources) {
-    // Format 1: Arrays of objects already in the right format
-    if (validatedResources.youtubeVideos) {
-      youtubeVideos = validatedResources.youtubeVideos;
-    }
-    if (validatedResources.githubRepositories) {
-      // Format 2: String-based resources that need parsing
-      if (Array.isArray(validatedResources.githubRepositories) && 
-          validatedResources.githubRepositories.every(repo => typeof repo === 'string')) {
-        githubRepositories = (validatedResources.githubRepositories as string[]).map(repo => {
-          if (typeof repo === 'string' ) {
-            const match = repo.match(/Explore Here: \[(.*?)\]\((.*?)\)/);
-            if (match) {
-              return { title: match[1], url: match[2] };
-            }
-            return { title: repo, url: "" };
+  const [videos, setVideos] = React.useState<Array<{title: string, url: string}>>([]);
+  
+  // Process video URL if provided directly
+  React.useEffect(() => {
+    if (videoUrl) {
+      setVideos([{
+        title: 'Watch Tutorial',
+        url: videoUrl
+      }]);
+    } else if (validatedResources.youtubeVideos?.length) {
+      // Fallback to validated resources if no direct videoUrl
+      setVideos(validatedResources.youtubeVideos);
+    } else {
+      // Extract from resources as a last resort
+      const videoItems: Array<{title: string, url: string}> = [];
+      
+      resources.forEach(resource => {
+        if (typeof resource !== 'string') return;
+        
+        if (resource.toLowerCase().includes('video:') || 
+            resource.toLowerCase().includes('youtube') ||
+            resource.toLowerCase().includes('watch here')) {
+          const match = resource.match(/\[(.*?)\]\((.*?)\)/);
+          if (match && match[2] && (match[2].includes('youtube.com') || match[2].includes('youtu.be'))) {
+            videoItems.push({
+              title: match[1] || 'Watch Tutorial',
+              url: match[2].startsWith('http') ? match[2] : `https://${match[2]}`
+            });
           }
-          return repo;
-        });
-      } else {
-        githubRepositories = validatedResources.githubRepositories as Array<{ title: string; url: string }>;
-      }
-    }
-    if (validatedResources.blogArticles) {
-      // Format 2: String-based resources that need parsing
-      if (Array.isArray(validatedResources.blogArticles) && 
-       validatedResources.blogArticles.every( blog => typeof blog === 'string') ){
-        blogArticles = (validatedResources.blogArticles as string[]).map(blog => {
-          if (typeof blog === 'string') {
-            const match = blog.match(/Read Here: \[(.*?)\]\((.*?)\)/);
-            if (match) {
-              return { title: match[1], url: match[2] };
-            }
-            return { title: blog, url: "" };
-          }
-          return blog;
-        });
-      } else {
-        blogArticles = validatedResources.blogArticles as Array<{ title: string; url: string }>;
-      }
-    }
-  }
-
-  // Extract YouTube links from resources if not explicitly provided
-  if (youtubeVideos.length === 0) {
-    resources.forEach(resource => {
-      if (resource.toLowerCase().includes('video:') || resource.toLowerCase().includes('watch here')) {
-        const match = resource.match(/\[(.*?)\]\((.*?)\)/);
-        if (match && (match[2].includes('youtube.com') || match[2].includes('youtu.be'))) {
-          youtubeVideos.push({ title: match[1], url: match[2] });
         }
+      });
+      
+      if (videoItems.length > 0) {
+        setVideos(videoItems);
       }
+    }
+  }, [resources, validatedResources.youtubeVideos, videoUrl]);
+  
+  // Process other resources (non-video)
+  const otherResources = React.useMemo(() => {
+    return resources.filter(r => {
+      if (typeof r !== 'string') return true;
+      return !r.toLowerCase().includes('video:') && 
+             !r.toLowerCase().includes('youtube') &&
+             !r.toLowerCase().includes('watch here');
     });
-  }
+  }, [resources]);
 
   return (
     <Card className="mb-4 overflow-hidden text-slate-300">
@@ -191,10 +195,12 @@ export function StepCard({ id, title, duration, description, resources, practice
             <div>
               <h4 className="font-medium mb-2">Resources</h4>
               <ul className="space-y-2">
-                {resources.map((resource, index) => (
+                {otherResources.map((resource, index) => (
                   <li key={index} className="flex gap-2 items-start">
                     <span className="text-primary mt-1">📚</span>
-                    <div className="flex-1">{parseMarkdownLink(resource)}</div>
+                    <div className="flex-1">
+                      {typeof resource === 'string' ? parseMarkdownLink(resource) : resource}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -212,9 +218,26 @@ export function StepCard({ id, title, duration, description, resources, practice
               </ul>
             </div>
 
-            <ResourceSection title="YouTube Videos" items={youtubeVideos} />
-            <ResourceSection title="GitHub Repositories" items={githubRepositories} />
-            <ResourceSection title="Blog Articles" items={blogArticles} />
+            {videos.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-medium mb-2">Video Tutorials</h4>
+                <ul className="space-y-2">
+                  {videos.map((video, index) => (
+                    <li key={index} className="flex gap-2 items-start">
+                      <span className="text-red-500 mt-1">▶️</span>
+                      <a 
+                        href={video.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        {video.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </CardContent>
       )}
