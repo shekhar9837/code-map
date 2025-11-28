@@ -12,6 +12,7 @@ export  interface Step {
     resources: string[];
     practice: string[];
     validatedResources: ValidatedResources;
+    videoUrl?: string;
   }
   
 export  interface RoadmapData {

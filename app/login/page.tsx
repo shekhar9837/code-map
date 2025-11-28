@@ -51,7 +51,7 @@ export default function LoginPage() {
           access_type: 'offline',
           prompt: 'consent'
         },
-        redirectTo: 'https://codemap.shekharcodes.tech/auth/callback'
+        redirectTo: process.env.NEXT_PUBLIC_CALLBACK_URL
       }
     })
 
