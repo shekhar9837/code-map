@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { AppError } from '@/lib/errors/app.error';
 
-type ApiResponse<T = any> = {
+type ApiResponse<T = unknown> = {
   data?: T;
   error?: string;
   details?: unknown;
   success: boolean;
 };
 
-export const createApiResponse = <T = any>(
+export const createApiResponse = <T = unknown>(
   data: T,
   status: number = 200,
   headers?: Record<string, string>

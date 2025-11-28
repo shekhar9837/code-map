@@ -8,7 +8,7 @@ export type Json =
 
 export interface Database {
   public: {
-    Tables: {
+    Tables: Record<string, never> & {
       // Add your database table types here
       // Example:
       // profiles: {

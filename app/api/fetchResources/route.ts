@@ -6,6 +6,7 @@ import { resourceSchemas } from '@/lib/validations/resource.validations';
 import { validateRequest } from '@/lib/utils/validation';
 import { Database } from '@/lib/types/supabase';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { RoadmapStep } from '@/lib/types';
 
 const resourceService = ResourceService.getInstance();
 
@@ -53,7 +54,7 @@ const handler = async ({
   // Process and format the data according to the ResourceResponse type
   const response: ResourceResponse = {
     roadmap: {
-      steps: await Promise.all(roadmapSteps.map(async (step: any, index: number) => {
+      steps: await Promise.all(roadmapSteps.map(async (step: RoadmapStep, index: number) => {
         const videoSearchQuery = `${topic} ${step.title} tutorial for beginners`;
         const videoUrl = await resourceService.fetchYouTubeVideoForStep(videoSearchQuery);
         
@@ -67,12 +68,22 @@ const handler = async ({
       })),
     },
     resources: {
-      github: Array.isArray(githubRepos) ? githubRepos.map((repo: any) => ({
-        id: repo.id?.toString() || `repo-${Math.random().toString(36).substr(2, 9)}`,
-        name: repo.name || 'Unnamed Repository',
-        description: repo.description || 'No description available'
-      })) : [],
-      blogs: Array.isArray(blogArticles) ? blogArticles.map((article: any, index: number) => ({
+      github: Array.isArray(githubRepos) ? githubRepos.map((repo: string | { id?: string | number; name?: string; description?: string }) => {
+        // Handle both string URLs and object formats
+        if (typeof repo === 'string') {
+          return {
+            id: `repo-${Math.random().toString(36).substr(2, 9)}`,
+            name: 'Repository',
+            description: repo
+          };
+        }
+        return {
+          id: repo.id?.toString() || `repo-${Math.random().toString(36).substr(2, 9)}`,
+          name: repo.name || 'Unnamed Repository',
+          description: repo.description || 'No description available'
+        };
+      }) : [],
+      blogs: Array.isArray(blogArticles) ? blogArticles.map((article: { id?: string; title?: string; url?: string }, index: number) => ({
         id: article.id || `blog-${index}`,
         title: article.title || 'Untitled Article',
         url: article.url || '#'
