@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation'
 
 import { createClient } from '@/utils/supabase/server'
 
+// Force dynamic rendering since this page uses cookies for authentication
+export const dynamic = 'force-dynamic'
+
 export default async function PrivatePage() {
   const supabase = await createClient()
 
