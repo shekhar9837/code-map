@@ -4,6 +4,20 @@ import { updateSession } from './utils/supabase/middleware'
 // Next.js 16: Middleware is now called Proxy
 // This function runs before a request is completed and can modify the response
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  
+  // Early return for root path to ensure it's always accessible
+  // This prevents 404 errors on Vercel
+  if (pathname === '/' || pathname === '') {
+    try {
+      const response = await updateSession(request)
+      return response || NextResponse.next({ request })
+    } catch (error) {
+      // Even if Supabase fails, allow root path to load
+      return NextResponse.next({ request })
+    }
+  }
+  
   try {
     // Always ensure we return a response to prevent proxy invocation errors
     const response = await updateSession(request)
@@ -33,30 +47,14 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Simplified matcher: exclude only essential Next.js internal routes
+  // This matches all routes except API routes and static files
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
-     * - Static assets (images, fonts, etc.)
-     * 
-     * Also exclude prefetch requests to optimize performance
-     * 
-     * Note: The pattern uses .*? to allow zero or more characters, ensuring root path / matches
-     */
-    {
-      source: '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js|woff|woff2|ttf|eot|ico)$).*)?',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
-    },
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
+  // REQUIRED: Supabase SSR uses dynamic code that needs explicit permission in Edge runtime
+  // Without this, you'll get "EvalError: Code generation from strings disallowed"
   unstable_allowDynamic: [
-    // Allow dynamic code from @supabase/ssr and related dependencies
-    // This is required for Edge Runtime compatibility
     '**/node_modules/@supabase/**',
     '**/node_modules/function-bind/**',
     '**/node_modules/has/**',
