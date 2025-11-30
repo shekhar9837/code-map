@@ -61,6 +61,7 @@ export async function updateSession(request: NextRequest) {
     if (error) {
       console.error('Error getting user:', error.message)
       // Continue without authentication check - let the app handle it
+      // Return the response to allow the request to proceed
       return supabaseResponse
     }
 

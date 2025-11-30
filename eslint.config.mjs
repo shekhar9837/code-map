@@ -1,8 +1,13 @@
 import { FlatCompat } from '@eslint/eslintrc'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+// Polyfill for __dirname in ESM
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const compat = new FlatCompat({
-  // import.meta.dirname is available after Node.js v20.11.0
-  baseDirectory: import.meta.dirname,
+  baseDirectory: __dirname,
 })
 
 const eslintConfig = [
