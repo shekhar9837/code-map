@@ -19,7 +19,7 @@ type ApiHandler<T = unknown> = (context: HandlerContext) => Promise<NextResponse
 export function withApiHandler<T = unknown>(handler: ApiHandler<T>) {
   const logger = LoggerService.getLogger('ApiHandler');
   
-  return async (req: NextRequest, { params = {} }: { params?: Record<string, string> } = {}) => {
+  return async (req: NextRequest, { params }: { params?: Promise<Record<string, string>> | Record<string, string> } = {}) => {
     try {
       // Authentication
       const supabase = await createClient();
@@ -29,12 +29,15 @@ export function withApiHandler<T = unknown>(handler: ApiHandler<T>) {
         throw new AuthenticationError();
       }
 
+      // Await params if it's a Promise (Next.js 15+)
+      const resolvedParams = params instanceof Promise ? await params : (params || {});
+
       // Call the actual handler
       return await handler({ 
         req, 
         supabase, 
         user: { id: user.id }, 
-        params: params || {} 
+        params: resolvedParams 
       });
       
     } catch (error) {

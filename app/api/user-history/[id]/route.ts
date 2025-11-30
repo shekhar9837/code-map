@@ -3,16 +3,16 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    if (!params?.id) {
+    const { id } = await params
+    
+    if (!id) {
         return NextResponse.json(
             { error: 'Missing ID parameter' },
             { status: 400 }
         )
     }
-
-    const id = params.id
     // console.log('Received ID:', id)
     try {
         const supabase = await createClient()
