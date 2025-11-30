@@ -3,9 +3,6 @@ import { AuthService } from '@/lib/services/auth.service';
 import { getLoginUrl } from '@/constants/urls';
 import { AUTH } from '@/constants/messages';
 
-// Force dynamic rendering since this route uses cookies via AuthService
-export const dynamic = 'force-dynamic'
-
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');

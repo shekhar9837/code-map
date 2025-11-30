@@ -1,9 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/middleware/api-handler';
-
-// Force dynamic rendering since this route uses cookies via withApiHandler
-export const dynamic = 'force-dynamic';
 import { ResourceService } from '@/lib/services/resource.service';
 import { resourceSchemas } from '@/lib/validations/resource.validations';
 import { validateRequest } from '@/lib/utils/validation';
