@@ -7,9 +7,7 @@ export async function proxy(request: NextRequest) {
   } catch (error) {
     // Fallback response if proxy fails completely
     console.error('Proxy execution error:', error)
-    return NextResponse.next({
-      request,
-    })
+    return NextResponse.next()
   }
 }
 
