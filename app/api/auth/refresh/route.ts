@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Ensure this route runs in Node.js runtime (not Edge)
 export const runtime = 'nodejs'
+// Force dynamic rendering since this route uses cookies
+export const dynamic = 'force-dynamic'
 
 interface RefreshTokenRequest {
   refresh_token?: string
