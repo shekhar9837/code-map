@@ -5,8 +5,8 @@ export async function updateSession(request: NextRequest) {
   try {
     // Check if environment variables are set
     // In Edge runtime, use process.env directly (works in Vercel)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase environment variables', {

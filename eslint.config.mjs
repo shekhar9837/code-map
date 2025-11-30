@@ -1,16 +1,17 @@
+// eslint.config.js
 import { FlatCompat } from '@eslint/eslintrc'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
-// Polyfill for __dirname in ESM
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
+  resolvePluginsRelativeTo: __dirname,
 })
 
-const eslintConfig = [
+export default [
   ...compat.config({
     extends: ['next'],
     rules: {
@@ -19,5 +20,3 @@ const eslintConfig = [
     },
   }),
 ]
-
-export default eslintConfig
