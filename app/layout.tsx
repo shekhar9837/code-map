@@ -1,24 +1,27 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import toast, { Toaster } from 'react-hot-toast';
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Toaster } from 'react-hot-toast';
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { UserHistorySidebar } from "@/components/UserHistorySidebar"
-import { cookies } from "next/headers";
 import Navbar from "@/components/Navbar";
 import { Analytics } from "@vercel/analytics/react"
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import { Poppins, Instrument_Serif} from "next/font/google"
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-instrument-serif',
+})
+
+export { instrumentSerif }
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://codemap.shekharcodes.tech'),
   title: {
     default: 'CodeMap - Your Personal Learning Roadmap',
     template: '%s | CodeMap'
@@ -37,11 +40,6 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
   robots: {
     index: true,
     follow: true,
@@ -53,7 +51,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://codemap.shekharcodes.tech/', // Replace with your actual domain
+    url: 'https://codemap.shekharcodes.tech/',
     title: 'CodeMap - Your Personal Learning Roadmap',
     description: 'Create personalized learning roadmaps for programming topics with curated resources.',
     siteName: 'CodeMap',
@@ -74,7 +72,7 @@ export const metadata: Metadata = {
       height: 630,
       alt: 'CodeMap Preview',
     }],
-    creator: '@shekhar9837', // Replace with your Twitter handle
+    creator: '@shekhar_tw',
   },
   verification: {
     google: 'your-google-site-verification',
@@ -85,6 +83,12 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -92,8 +96,8 @@ export default function RootLayout({
 }>) {
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
+    <html lang="en" suppressHydrationWarning className={poppins.className}>
+      <body className={`${instrumentSerif.className} ${instrumentSerif.variable}`}>
 
       <SidebarProvider defaultOpen={false}>
         <UserHistorySidebar />

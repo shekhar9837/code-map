@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(
@@ -16,14 +15,13 @@ export async function GET(
     const id = params.id
     // console.log('Received ID:', id)
     try {
-        const cookieStore = cookies()
-        const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+        const supabase = await createClient()
 
-        // Get the current session to verify authentication
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        // Get the current user to verify authentication
+        const { data: { user }, error: sessionError } = await supabase.auth.getUser()
         // console.log('Session:', session) // Debug log for session
 
-        if (sessionError || !session) {
+        if (sessionError || !user) {
             return NextResponse.json(
                 { error: 'Unauthorized access' },
                 { status: 401 }
@@ -34,7 +32,7 @@ export async function GET(
         const { data: history, error: historyError } = await supabase
             .from('roadmap_history')
             .select('*')
-            .eq('user_id', session.user.id)
+            .eq('user_id', user.id)
             .eq('id', id)
 
         if (historyError) {
@@ -46,7 +44,7 @@ export async function GET(
         }
 
         if (!history || history.length === 0) {
-            console.warn('No history found for user:', session.user.id, 'with id:', id);
+            console.warn('No history found for user:', user.id, 'with id:', id);
             return NextResponse.json(
                 { error: 'No history found' },
                 { status: 404 }

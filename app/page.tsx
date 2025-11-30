@@ -27,6 +27,7 @@ import YoutubeVideoCard from "@/components/YoutubeVideoCard";
 import BlogsCard from "@/components/BlogsCard";
 import GithubCard from "@/components/GithubCard";
 import RoadmapCard from "@/components/RoadmapCard";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [topic, setTopic] = useState("");
@@ -44,6 +45,7 @@ export default function Home() {
   const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
 
   const { loading, user } = useAuth();
+  const router = useRouter();
   // console.log("resurces", resources); // Debug log
 
 
@@ -63,11 +65,25 @@ export default function Home() {
   }, [resources]);
 
   async function fetchResources(topic: string) {
-    if (!user) {
-      toast.error("Please login to continue");
-      // window.location.href = "/login";
+    // Check if topic is provided
+    if (!topic.trim()) {
+      toast.error("Please enter a topic");
       return;
     }
+
+    // Check if user is logged in - ask to login when entering a prompt
+    if (!user) {
+      toast.error("Please login to generate your learning roadmap", {
+        duration: 4000,
+        icon: "🔐",
+      });
+      // Small delay to show the toast before redirecting
+      setTimeout(() => {
+        router.push("/login");
+      }, 500);
+      return;
+    }
+
     setIsLoading(true);
     setIsSearching(true);
     setResources("");
@@ -135,7 +151,7 @@ export default function Home() {
       ) : !resources ? (
         // Show PromptInput only when there's no data
         <div className="w-full pt-28 max-w-3xl mx-auto flex items-center justify-center flex-col">
-          <h2 className="text-5xl font-semibold pb-12 text-center text-slate-100">
+            <h2 className="text-6xl pb-12 text-center text-slate-100 font-[family-name:var(--font-instrument-serif)]">
             What tech skill do you <br />want to learn?
           </h2>
           <PromptInput

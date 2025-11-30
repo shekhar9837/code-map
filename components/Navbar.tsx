@@ -3,13 +3,13 @@ import { BookOpen, LogOut } from 'lucide-react'
 import React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { SidebarTrigger } from './ui/sidebar'
 import Link from 'next/link'
 
 const Navbar = () => {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const { user, loading } = useAuth();
   // console.log(user, loading)
 
@@ -22,8 +22,8 @@ const Navbar = () => {
     await supabase.auth.signOut();
   };
   return (
-    <header className="w-full backdrop-blur-xl z-10">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="w-full backdrop-blur-xl z-10 max-w-7xl mx-auto">
+      <nav className=" px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center h-16">
         <div className="flex items-center gap-2 sm:gap-4" >
         {!loading && (
@@ -39,7 +39,7 @@ const Navbar = () => {
         <div className='gap-1 sm:gap-2 flex items-center'>
         <Link href="/" className="flex items-center gap-2 sm:gap-4">
           <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-          <h1 className="text-base sm:text-lg font-semibold truncate">Code-map</h1>
+          <h1 className="md:text-2xl text-lg font-semibold truncate">Code-map</h1>
         </Link>
         </div>
         </div>
@@ -86,7 +86,7 @@ const Navbar = () => {
             <Button 
               className='px-4 sm:px-6 py-2 bg-neutral-800' 
               variant="ghost" 
-              size="sm" 
+              size="lg" 
               onClick={() => window.location.href = '/login'}
             >
               Login

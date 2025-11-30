@@ -5,7 +5,7 @@ import { ResourceService } from '@/lib/services/resource.service';
 import { resourceSchemas } from '@/lib/validations/resource.validations';
 import { validateRequest } from '@/lib/utils/validation';
 import { Database } from '@/lib/types/supabase';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { RoadmapStep } from '@/lib/types';
 
 const resourceService = ResourceService.getInstance();
@@ -44,7 +44,7 @@ const handler = async ({
 }: {
   req: NextRequest;
   user: { id: string };
-  supabase: ReturnType<typeof createRouteHandlerClient<Database>>;
+  supabase: SupabaseClient<Database>;
 }) => {
   const body = await req.json();
   const { topic } = validateRequest(resourceSchemas.fetchResources, body);

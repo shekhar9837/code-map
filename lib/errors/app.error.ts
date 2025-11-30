@@ -27,9 +27,3 @@ export class AuthenticationError extends AppError {
     super(message, 401, true, details);
   }
 }
-
-export class RateLimitError extends AppError {
-  constructor(message: string = AUTH.ERROR.TOO_MANY_REQUESTS) {
-    super(message, 429, true);
-  }
-}

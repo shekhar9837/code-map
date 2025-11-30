@@ -9,7 +9,7 @@ export async function createClient() {
 
     const cookieStore = await cookies()
 
-    const client = createServerClient(
+    return createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
@@ -23,7 +23,6 @@ export async function createClient() {
                 cookieStore.set(name, value, options)
               )
             } catch (error) {
-              console.error('Error setting cookies:', error)
               // The `setAll` method was called from a Server Component.
               // This can be ignored if you have middleware refreshing
               // user sessions.
@@ -32,14 +31,6 @@ export async function createClient() {
         },
       }
     )
-
-    // Verify the client was created successfully
-    const { error } = await client.auth.getSession()
-    if (error) {
-      throw error
-    }
-
-    return client
   } catch (error) {
     console.error('Error creating Supabase client:', error)
     throw error

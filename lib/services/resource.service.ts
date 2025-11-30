@@ -1,5 +1,3 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { LoggerService } from "./logger.service";
 import { AppError } from "@/lib/errors/app.error";
 import { resourceSchemas } from "@/lib/validations/resource.validations";
