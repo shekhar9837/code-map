@@ -4,19 +4,20 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function updateSession(request: NextRequest) {
   try {
     // Check if environment variables are set
+    // In Edge runtime, use process.env directly (works in Vercel)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing Supabase environment variables')
-      return NextResponse.next({
-        request,
+      console.error('Missing Supabase environment variables', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseAnonKey,
       })
+      // Return response without breaking the request
+      return NextResponse.next({ request })
     }
 
-    let supabaseResponse = NextResponse.next({
-      request,
-    })
+    let supabaseResponse = NextResponse.next({ request })
 
     const supabase = createServerClient(
       supabaseUrl,
@@ -32,9 +33,7 @@ export async function updateSession(request: NextRequest) {
               request.cookies.set(name, value)
             })
             // Create new response with updated cookies
-            supabaseResponse = NextResponse.next({
-              request,
-            })
+            supabaseResponse = NextResponse.next({ request })
             // Set cookies on response
             cookiesToSet.forEach(({ name, value, options }) => {
               supabaseResponse.cookies.set(name, value, options)
@@ -57,9 +56,13 @@ export async function updateSession(request: NextRequest) {
       error,
     } = await supabase.auth.getUser()
 
-
     if (error) {
-      console.error('Error getting user:', error.message)
+      // Log error but don't fail the request
+      console.error('Error getting user:', {
+        message: error.message,
+        status: error.status,
+        path: request.nextUrl.pathname,
+      })
       // Continue without authentication check - let the app handle it
       // Return the response to allow the request to proceed
       return supabaseResponse
@@ -102,11 +105,17 @@ export async function updateSession(request: NextRequest) {
   } catch (error) {
     // Catch any unexpected errors and log them
     // This prevents the proxy from crashing and causing 500 errors
-    console.error('Proxy session update error:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('Proxy session update error:', {
+      message: errorMessage,
+      stack: errorStack,
+      path: request.nextUrl.pathname,
+    })
+    
     // Return a response to prevent the proxy from crashing
     // The app will continue to function, but auth features may not work
-    return NextResponse.next({
-      request,
-    })
+    return NextResponse.next({ request })
   }
 }

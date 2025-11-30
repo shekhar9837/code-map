@@ -6,8 +6,18 @@ export async function middleware(request: NextRequest) {
     return await updateSession(request)
   } catch (error) {
     // Fallback response if middleware fails completely
-    console.error('Middleware execution error:', error)
-    return NextResponse.next()
+    // Log error details for debugging
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('Middleware execution error:', {
+      message: errorMessage,
+      stack: errorStack,
+      path: request.nextUrl.pathname,
+    })
+    
+    // Return a proper response to prevent middleware invocation failure
+    return NextResponse.next({ request })
   }
 }
 
