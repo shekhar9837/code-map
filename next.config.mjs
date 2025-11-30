@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Turbopack configuration (Next.js 16+ uses Turbopack by default)
-  turbopack: {},
-
   experimental: {
     serverComponentsExternalPackages: ['@eslint/eslintrc'],
   },

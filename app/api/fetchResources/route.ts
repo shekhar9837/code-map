@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/middleware/api-handler';
 import { ResourceService } from '@/lib/services/resource.service';
@@ -7,6 +6,9 @@ import { validateRequest } from '@/lib/utils/validation';
 import { Database } from '@/lib/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RoadmapStep } from '@/lib/types';
+
+// Mark route as dynamic since it uses cookies for authentication
+export const dynamic = 'force-dynamic';
 
 const resourceService = ResourceService.getInstance();
 

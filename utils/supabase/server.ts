@@ -1,17 +1,28 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+/**
+ * Creates a Supabase client for Server Components, Server Actions, and Route Handlers.
+ * 
+ * This client is read-only in Server Components. For mutations, use Route Handlers
+ * or ensure you have proxy/middleware handling session refresh.
+ * 
+ * @returns {Promise<ReturnType<typeof createServerClient>>} Supabase client instance
+ */
 export async function createClient() {
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error('Missing Supabase environment variables')
     }
 
     const cookieStore = await cookies()
 
     return createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         cookies: {
           getAll() {
@@ -24,8 +35,9 @@ export async function createClient() {
               )
             } catch (error) {
               // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
+              // This is expected in Server Components (read-only context).
+              // Session refresh should be handled by proxy/middleware.
+              // This error can be safely ignored.
             }
           },
         },

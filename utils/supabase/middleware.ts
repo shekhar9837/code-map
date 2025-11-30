@@ -17,7 +17,8 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.next({ request })
     }
 
-    let supabaseResponse = NextResponse.next({ request })
+    // Create response object that will be updated with cookies
+    let response = NextResponse.next({ request })
 
     const supabase = createServerClient(
       supabaseUrl,
@@ -33,40 +34,35 @@ export async function updateSession(request: NextRequest) {
               request.cookies.set(name, value)
             })
             // Create new response with updated cookies
-            supabaseResponse = NextResponse.next({ request })
+            response = NextResponse.next({ request })
             // Set cookies on response
             cookiesToSet.forEach(({ name, value, options }) => {
-              supabaseResponse.cookies.set(name, value, options)
+              response.cookies.set(name, value, options)
             })
           },
         },
       }
     )
 
-    // Do not run code between createServerClient and
-    // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-    // issues with users being randomly logged out.
-
-    // IMPORTANT: DO NOT REMOVE auth.getUser()
-    // This call refreshes the session if needed
-
-
+    // IMPORTANT: Use getSession() for automatic session refresh
+    // This is the recommended pattern for Next.js 16 proxy/middleware
+    // getSession() automatically refreshes expired sessions
     const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser()
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
 
-    if (error) {
-      // Log error but don't fail the request
-      console.error('Error getting user:', {
-        message: error.message,
-        status: error.status,
+    // If session error, log but continue (let app handle auth)
+    if (sessionError) {
+      console.error('Error getting session:', {
+        message: sessionError.message,
         path: request.nextUrl.pathname,
       })
-      // Continue without authentication check - let the app handle it
-      // Return the response to allow the request to proceed
-      return supabaseResponse
+      return response
     }
+
+    const user = session?.user ?? null
+
 
     // Define public paths that don't require authentication
     const pathname = request.nextUrl.pathname
@@ -78,30 +74,25 @@ export async function updateSession(request: NextRequest) {
     // Only redirect to login if user is not authenticated and trying to access a protected path
     if (!user && !isPublicPath) {
       // Create redirect URL preserving the original URL for post-login redirect
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      // Optionally preserve the original path for redirect after login
-      if (pathname !== '/') {
-        url.searchParams.set('redirectTo', pathname)
+      // Use request.url as base to ensure proper domain/host handling on Vercel
+      const loginUrl = new URL('/login', request.url)
+      // Preserve the original path for redirect after login
+      if (pathname && pathname !== '/') {
+        loginUrl.searchParams.set('redirectTo', pathname)
       }
-      return NextResponse.redirect(url)
+      // Return redirect response - this prevents "not found" errors
+      return NextResponse.redirect(loginUrl)
     }
 
-    // IMPORTANT: You *must* return the supabaseResponse object as it is.
+    // IMPORTANT: You *must* return the response object as it is.
     // This response contains the updated cookies from the session refresh.
-    // If you're creating a new response object with NextResponse.next() make sure to:
-    // 1. Pass the request in it, like so:
-    //    const myNewResponse = NextResponse.next({ request })
-    // 2. Copy over the cookies, like so:
-    //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-    // 3. Change the myNewResponse object to fit your needs, but avoid changing
-    //    the cookies!
-    // 4. Finally:
-    //    return myNewResponse
+    // The response object is automatically updated by setAll() when cookies change.
+    // If you need to modify the response, make sure to copy cookies:
+    //    myNewResponse.cookies.setAll(response.cookies.getAll())
     // If this is not done, you may be causing the browser and server to go out
     // of sync and terminate the user's session prematurely!
 
-    return supabaseResponse
+    return response
   } catch (error) {
     // Catch any unexpected errors and log them
     // This prevents the proxy from crashing and causing 500 errors
