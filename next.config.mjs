@@ -1,16 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        url: false,
-      }
-    }
-    return config
-  },
+  // Turbopack configuration (Next.js 16+ uses Turbopack by default)
+  turbopack: {},
 
   experimental: {
     serverComponentsExternalPackages: ['@eslint/eslintrc'],
