@@ -104,17 +104,17 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   } catch (error) {
     // Catch any unexpected errors and log them
-    // This prevents the proxy from crashing and causing 500 errors
+    // This prevents the middleware from crashing and causing 500 errors
     const errorMessage = error instanceof Error ? error.message : String(error)
     const errorStack = error instanceof Error ? error.stack : undefined
     
-    console.error('Proxy session update error:', {
+    console.error('Middleware session update error:', {
       message: errorMessage,
       stack: errorStack,
       path: request.nextUrl.pathname,
     })
     
-    // Return a response to prevent the proxy from crashing
+    // Return a response to prevent the middleware from crashing
     // The app will continue to function, but auth features may not work
     return NextResponse.next({ request })
   }
