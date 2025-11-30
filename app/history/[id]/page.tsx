@@ -8,13 +8,14 @@ import YoutubeVideoCard from "@/components/YoutubeVideoCard";
 import { HistoryItem, RoadmapData } from "@/lib/types";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { extractLinks } from "@/lib/helper";
 import { set } from "react-hook-form";
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page() {
+  const params = useParams<{ id: string }>()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resources, setResources] = useState<RoadmapData | string>("");
@@ -26,29 +27,11 @@ export default function Page({ params }: { params: { id: string } }) {
   const [historyData, setHistoryData] = useState<HistoryItem | null>(null);
   // console.log('historyData', historyData); // Debug log
 
-  useEffect(() => {
-    fetchHistory()
-  }, [])
-
-  useEffect(() => {
-    async function processYoutubeLinks() {
-      // console.log("Processing Youtube Links", historyData); // Debug log
-      if (historyData?.roadmap) {
-        const { youtubeLinks, githubLinks } = await extractLinks({
-          steps: historyData.roadmap.steps,
-          resources: historyData.resources
-        });
-        setYoutubeLinks(youtubeLinks);
-        setGithubLinks(githubLinks);
-        // console.log("Extracted links:", { youtubeLinks }); // Debug log
-      }
+  const fetchHistory = useCallback(async () => {
+    if (!params?.id) {
+      setError('Missing history ID');
+      return;
     }
-    if (historyData) {
-      processYoutubeLinks();
-    }
-  }, [historyData]);
-
-  async function fetchHistory() {
 
     setIsLoading(true);
     setIsSearching(true);
@@ -88,7 +71,31 @@ export default function Page({ params }: { params: { id: string } }) {
       setIsLoading(false);
       setIsSearching(false);
     }
-  }
+  }, [params?.id]);
+
+  useEffect(() => {
+    if (params?.id) {
+      fetchHistory()
+    }
+  }, [params?.id, fetchHistory])
+
+  useEffect(() => {
+    async function processYoutubeLinks() {
+      // console.log("Processing Youtube Links", historyData); // Debug log
+      if (historyData?.roadmap) {
+        const { youtubeLinks, githubLinks } = await extractLinks({
+          steps: historyData.roadmap.steps,
+          resources: historyData.resources
+        });
+        setYoutubeLinks(youtubeLinks);
+        setGithubLinks(githubLinks);
+        // console.log("Extracted links:", { youtubeLinks }); // Debug log
+      }
+    }
+    if (historyData) {
+      processYoutubeLinks();
+    }
+  }, [historyData]);
 
 
   if (isLoading) return <div className="py-6 md:py-10 px-8 w-full "><LoadingView /></div>
