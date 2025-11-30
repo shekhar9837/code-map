@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { ratelimit } from '@/lib/rateLimit';
+import { createClient } from '@/utils/supabase/server';
 import { LoggerService } from '@/lib/services/logger.service';
-import { AppError, AuthenticationError, RateLimitError } from '@/lib/errors/app.error';
+import { AppError, AuthenticationError } from '@/lib/errors/app.error';
 // import { createApiError } from '@/lib/utils/api-response';
 import { Database } from '@/lib/types/supabase';
 import { createApiError } from '../utils/api-response';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 type HandlerContext = {
   req: NextRequest;
-  supabase: ReturnType<typeof createRouteHandlerClient<Database>>;
+  supabase: SupabaseClient<Database>;
   user: { id: string };
   params: Record<string, string>;
 };
@@ -22,17 +21,8 @@ export function withApiHandler<T = unknown>(handler: ApiHandler<T>) {
   
   return async (req: NextRequest, { params = {} }: { params?: Record<string, string> } = {}) => {
     try {
-      // Rate limiting
-      const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-      const { success } = await ratelimit.limit(ip);
-      
-      if (!success) {
-        logger.warn('Rate limit exceeded', { ip });
-        throw new RateLimitError();
-      }
-
       // Authentication
-      const supabase = createRouteHandlerClient<Database>({ cookies });
+      const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {

@@ -1,16 +1,15 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createClient()
     
-    // Get the current session to verify authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    // console.log('Session:', session) // Debug log for session
+    // Get the current user to verify authentication
+    const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+    // console.log('User:', user) // Debug log for user
 
-    if (sessionError || !session) {
+    if (sessionError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized access' },
         { status: 401 }
@@ -27,7 +26,7 @@ export async function GET(request: Request) {
     const { data: history, error: historyError, count } = await supabase
       .from('roadmap_history')
       .select('*', { count: 'exact' })
-      .eq('user_id', session.user.id) // Ensure this matches the correct user_id
+      .eq('user_id', user.id) // Ensure this matches the correct user_id
       .order('created_at', { ascending: false })
       .range(start, start + limit - 1)
 

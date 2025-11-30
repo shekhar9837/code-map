@@ -7,7 +7,7 @@ import * as z from "zod"
 // import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 // import { Input } from '@/components/ui/input'
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/client'
 import { FcGoogle } from 'react-icons/fc'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -25,7 +25,7 @@ const formSchema = z.object({
 })
 
 export default function SignupPage() {
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
