@@ -154,6 +154,7 @@ export default function Home() {
             <h2 className="text-6xl pb-12 text-center text-slate-100 font-[family-name:var(--font-instrument-serif)]">
             What tech skill do you <br />want to learn?
           </h2>
+          
           <PromptInput
             value={topic}
             onValueChange={setTopic}
