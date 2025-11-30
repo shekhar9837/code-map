@@ -66,10 +66,11 @@ export async function updateSession(request: NextRequest) {
 
     // Define public paths that don't require authentication
     const pathname = request.nextUrl.pathname
+    // Normalize pathname - ensure root is always '/'
+    const normalizedPath = pathname === '' ? '/' : pathname
     const publicPaths = ['/', '/login', '/signup']
-    const isPublicPath = publicPaths.includes(pathname) || 
-                         pathname === '' || // Handle empty pathname as root
-                         pathname.startsWith('/auth')
+    const isPublicPath = publicPaths.includes(normalizedPath) || 
+                         normalizedPath.startsWith('/auth')
 
     // Only redirect to login if user is not authenticated and trying to access a protected path
     if (!user && !isPublicPath) {
@@ -77,12 +78,15 @@ export async function updateSession(request: NextRequest) {
       // Use request.url as base to ensure proper domain/host handling on Vercel
       const loginUrl = new URL('/login', request.url)
       // Preserve the original path for redirect after login
-      if (pathname && pathname !== '/') {
-        loginUrl.searchParams.set('redirectTo', pathname)
+      if (normalizedPath && normalizedPath !== '/') {
+        loginUrl.searchParams.set('redirectTo', normalizedPath)
       }
       // Return redirect response - this prevents "not found" errors
       return NextResponse.redirect(loginUrl)
     }
+    
+    // Ensure root path and all public paths are always accessible
+    // This prevents 404 errors on Vercel
 
     // IMPORTANT: You *must* return the response object as it is.
     // This response contains the updated cookies from the session refresh.

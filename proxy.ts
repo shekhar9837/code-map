@@ -43,9 +43,11 @@ export const config = {
      * - Static assets (images, fonts, etc.)
      * 
      * Also exclude prefetch requests to optimize performance
+     * 
+     * Note: The pattern uses .*? to allow zero or more characters, ensuring root path / matches
      */
     {
-      source: '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js|woff|woff2|ttf|eot|ico)$).*)',
+      source: '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js|woff|woff2|ttf|eot|ico)$).*)?',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },
