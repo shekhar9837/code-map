@@ -167,7 +167,6 @@ export class ResourceService {
       )}&type=video&key=${apiKey}&maxResults=1&relevanceLanguage=en`;
 
       const response = await fetch(url);
-      // console.log("youtube response", response);
       if (!response.ok) return null;
 
       const data = await response.json();

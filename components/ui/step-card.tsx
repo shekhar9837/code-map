@@ -62,7 +62,6 @@ function parseMarkdownLink(text: string) {
 
 // Function to convert string-based resources to object format
 function parseResourceStrings(resources: string[], type: string): Array<{ title: string; url: string }> {
-  // console.log("Parsing resources:", { resources, type });
   return resources
     .filter(resource => resource.includes(`${type}:`))
     .map(resource => {
@@ -77,9 +76,7 @@ function parseResourceStrings(resources: string[], type: string): Array<{ title:
     });
 }
 
-const ResourceSection = ({ title, items }: { title: string; items: Array<{ title: string; url: string }> }) =>
-    // console.log("ResourceSection Props:", { title, items }) || // Debugging log
-  (
+const ResourceSection = ({ title, items }: { title: string; items: Array<{ title: string; url: string }> }) => (
   items && items.length > 0 && (
     <div className="mt-4">
       <h4 className="font-medium mb-2">{title}</h4>

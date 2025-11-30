@@ -13,13 +13,11 @@ export async function GET(
             { status: 400 }
         )
     }
-    // console.log('Received ID:', id)
     try {
         const supabase = await createClient()
 
         // Get the current user to verify authentication
         const { data: { user }, error: sessionError } = await supabase.auth.getUser()
-        // console.log('Session:', session) // Debug log for session
 
         if (sessionError || !user) {
             return NextResponse.json(

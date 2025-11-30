@@ -9,7 +9,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
   const router = useRouter()
-  //   console.log("user", user)
 
   useEffect(() => {
     // Get initial session

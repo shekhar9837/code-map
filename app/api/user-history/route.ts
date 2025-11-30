@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
     
     // Get the current user to verify authentication
     const { data: { user }, error: sessionError } = await supabase.auth.getUser()
-    // console.log('User:', user) // Debug log for user
 
     if (sessionError || !user) {
       return NextResponse.json(
@@ -29,9 +28,6 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id) // Ensure this matches the correct user_id
       .order('created_at', { ascending: false })
       .range(start, start + limit - 1)
-
-    // console.log('Query user_id:', session.user.id) // Debug log for user_id
-    // console.log('History:', history) // Debug log for history
 
     if (historyError) {
       console.error('History fetch error:', historyError);

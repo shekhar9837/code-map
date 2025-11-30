@@ -11,7 +11,6 @@ import Link from 'next/link'
 const Navbar = () => {
   const supabase = createClient();
   const { user, loading } = useAuth();
-  // console.log(user, loading)
 
   // Get user initials for avatar
   const getUserInitials = () => {

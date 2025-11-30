@@ -12,7 +12,6 @@ import { useRouter, useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { extractLinks } from "@/lib/helper";
-import { set } from "react-hook-form";
 
 export default function Page() {
   const params = useParams<{ id: string }>()
@@ -25,7 +24,6 @@ export default function Page() {
   const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
   const [topic, setTopic] = useState("");
   const [historyData, setHistoryData] = useState<HistoryItem | null>(null);
-  // console.log('historyData', historyData); // Debug log
 
   const fetchHistory = useCallback(async () => {
     if (!params?.id) {
@@ -41,8 +39,7 @@ export default function Page() {
       const response = await axios(`/api/user-history/${params.id}`)
       const historyItem = response.data.history[0]; // Get the first history item
       setHistoryData(historyItem);
-      // console.log("historyItem", historyItem); // Debug log
-// 
+
       // Format the data to match our expected structure
       let result;
       if (historyItem && historyItem.roadmap) {
@@ -81,7 +78,6 @@ export default function Page() {
 
   useEffect(() => {
     async function processYoutubeLinks() {
-      // console.log("Processing Youtube Links", historyData); // Debug log
       if (historyData?.roadmap) {
         const { youtubeLinks, githubLinks } = await extractLinks({
           steps: historyData.roadmap.steps,
@@ -89,7 +85,6 @@ export default function Page() {
         });
         setYoutubeLinks(youtubeLinks);
         setGithubLinks(githubLinks);
-        // console.log("Extracted links:", { youtubeLinks }); // Debug log
       }
     }
     if (historyData) {

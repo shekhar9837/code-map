@@ -34,8 +34,6 @@ export interface RoadmapViewProps {
 }
 
 const RoadmapView: React.FC<RoadmapViewProps> = ({ content }) => {
-  // console.log('RoadmapView content:', content);
-
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     if (node.data.type === 'YouTube' && node.data.label) {
       const urlMatch = node.data.label.match(/\[.*?\]\((https:\/\/(?:www\.)?youtube\.com\/.*?)\)/);
@@ -101,10 +99,6 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ content }) => {
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => parseContentToGraph(content), [content]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  // Debug logs to check nodes and edges data
-  // console.log('Nodes:', nodes);
-  // console.log('Edges:', edges);
 
   return (
     <div className="w-full h-[600px]">
