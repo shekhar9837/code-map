@@ -466,7 +466,7 @@ Created by [Shekhar](https://github.com/shekhar9837)
 
 ## 🌐 Live Demo
 
-The application is deployed on Vercel: [https://code-map.shekharcodes.tech](https://code-map.shekharcodes.tech)
+The application is deployed on Vercel: [https://codemap.shekharworks.com](https://codemap.shekharworks.com)
 
 ---
 

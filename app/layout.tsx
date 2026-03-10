@@ -21,7 +21,7 @@ const instrumentSerif = Instrument_Serif({
 export { instrumentSerif }
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://codemap.shekharcodes.tech'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://codemap.shekharworks.com/'),
   title: {
     default: 'CodeMap - Your Personal Learning Roadmap',
     template: '%s | CodeMap'
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://codemap.shekharcodes.tech/',
+    url: 'https://codemap.shekharworks.com/',
     title: 'CodeMap - Your Personal Learning Roadmap',
     description: 'Create personalized learning roadmaps for programming topics with curated resources.',
     siteName: 'CodeMap',
