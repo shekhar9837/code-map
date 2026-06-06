@@ -97,7 +97,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning className={poppins.className}>
-      <body className={`${instrumentSerif.className} ${instrumentSerif.variable}`}>
+      <body className={instrumentSerif.variable}>
 
       <SidebarProvider defaultOpen={false}>
         <UserHistorySidebar />

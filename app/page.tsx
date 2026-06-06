@@ -140,13 +140,13 @@ export default function Home() {
 
   return (
     // <div className="w-full">
-    <main className="py-6 md:py-10 px-8 w-full ">
+    <main className="home-page">
       {isLoading ? (
         <LoadingView />
       ) : !resources ? (
         // Show PromptInput only when there's no data
-        <div className="w-full pt-28 max-w-3xl mx-auto flex items-center justify-center flex-col">
-            <h2 className="text-6xl pb-12 text-center text-slate-100 font-[family-name:var(--font-instrument-serif)]">
+        <div className="home-hero">
+          <h2 className="home-title">
             What tech skill do you <br />want to learn?
           </h2>
           
@@ -155,7 +155,7 @@ export default function Home() {
             onValueChange={setTopic}
             isLoading={isLoading}
             onSubmit={() => fetchResources(topic)}
-            className="w-full max-w-(--breakpoint-md) bg-slide-inset/95 backdrop-blur supports-[backdrop-filter]:bg-slide-inset/60"
+            className="home-prompt"
           >
             <PromptInputTextarea placeholder="Enter topic you want to learn..." />
             <PromptInputActions className="flex items-center justify-end gap-2 pt-2">
@@ -176,13 +176,13 @@ export default function Home() {
             </PromptInputActions>
           </PromptInput>
 
-          <div className="mt-6 flex md:flex-row flex-col flex-wrap gap-2 items-center justify-center">
-            <span className="text-sm text-slate-300">Popular searches: </span>
+          {/* <div className="home-popular">
+            <span className="text-sm  font-light text-slate-300">Popular searches: </span>
             {recentTopics.map((t) => (
               <Badge
                 key={t}
                 variant="secondary"
-                className="cursor-pointer px-8 py-2 mx-1 bg-transparent text-slate-100 border border-gray-700 gap-2 flex flex-wrap tracking-wider"
+                className="home-topic-badge text-xs font-light cursor-pointer bg-transparent text-slate-100 border border-gray-700 gap-2 flex flex-wrap tracking-wider"
                 onClick={() => {
                   setTopic(t);
                   fetchResources(t);
@@ -191,7 +191,7 @@ export default function Home() {
                 {t}
               </Badge>
             ))}
-          </div>
+          </div> */}
         </div>
       ) : (
         // Show content when data is available

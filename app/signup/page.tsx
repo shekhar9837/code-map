@@ -38,26 +38,31 @@ export default function SignupPage() {
   }
 
   return (
-    <section className="min-h-screen flex box-border justify-center items-center">
-      <div className="bg-card rounded-2xl flex max-w-3xl p-5 items-center">
-        <div className="md:w-1/2 px-8">
-          <h2 className="font-bold text-2xl">Sign Up</h2>
-          <p className="text-sm mt-4">Create an account to get started</p>
+    <section className="auth-page">
+      <div className="auth-card">
+        <div className="auth-form">
+          <div>
+            <h2 className="auth-title">Sign Up</h2>
+            <p className="auth-copy">Create an account to get started.</p>
+          </div>
 
-          <Button onClick={signUpWithGoogle} variant="outline" className="w-full mt-5 gap-2" disabled={isLoading}>
-            <FcGoogle className="text-2xl" />
+          <Button onClick={signUpWithGoogle} variant="outline" className="auth-google-button" disabled={isLoading}>
+            <FcGoogle className="auth-google-icon" />
             Sign up with Google
           </Button>
 
-          <div className="mt-5 text-xs flex justify-between items-center">
-            <p>Already have an account?</p>
-            <Link href="/login">
-              <Button variant="link">Login</Button>
+          <div className="auth-footer">
+            <span>Already have an account?</span>
+            <Link href="/login" className="auth-link">
+              Login
             </Link>
           </div>
         </div>
-        <div className="w-1/2 md:block hidden">
-          <img src="https://tecdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg" alt="Sign Up" />
+        <div className="auth-visual">
+          <img
+            src="https://tecdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg"
+            alt="Sign Up"
+          />
         </div>
       </div>
     </section>

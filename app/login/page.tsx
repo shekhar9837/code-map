@@ -27,25 +27,29 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="min-h-screen flex box-border justify-center items-center">
-      <div className="bg-card rounded-2xl flex max-w-3xl p-5 items-center">
-        <div className="md:w-1/2 px-8">
-          <h2 className="font-bold text-2xl">Login</h2>
-          <p className="text-sm mt-4">If you already have an account, easily log in</p>
-          <Button onClick={signInWithGoogle} variant="outline" className="w-full mt-5 gap-2">
-            <FcGoogle className="text-2xl" />
+    <section className="auth-page">
+      <div className="auth-card">
+        <div className="auth-form">
+          <div>
+            <h2 className="auth-title">Login</h2>
+            <p className="auth-copy">If you already have an account, easily log in.</p>
+          </div>
+          <Button onClick={signInWithGoogle} variant="outline" className="auth-google-button">
+            <FcGoogle className="auth-google-icon" />
             Login with Google
           </Button>
-          <p className="mt-5 text-xs border-b border-gray-400 py-4">Forgot your password?</p>
-          <div className="mt-3 text-xs flex justify-between items-center">
-            <p>If you do not have an account...</p>
-            <Link href="/signup">
-              <Button variant="link">Register</Button>
+          <div className="auth-footer">
+            <span>If you do not have an account...</span>
+            <Link href="/signup" className="auth-link">
+              Register
             </Link>
           </div>
         </div>
-        <div className="w-1/2 md:block hidden">
-          <img src="https://tecdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp" alt="Login" />
+        <div className="auth-visual">
+          <img
+            src="https://tecdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
+            alt="Login"
+          />
         </div>
       </div>
     </section>
