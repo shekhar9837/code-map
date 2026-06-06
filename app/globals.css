@@ -1,13 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:is(.dark *));
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --background-image-mesh-gradient: radial-gradient(at 89% 23%, #b71b98 0px, transparent 50%),
+    radial-gradient(at 6% 42%, #b71b4a 0px, transparent 50%),
+    radial-gradient(at 97% 84%, #b73a1b 0px, transparent 50%),
+    radial-gradient(at 43% 39%, #1bb73a 0px, transparent 50%),
+    radial-gradient(at 30% 26%, #1b98b7 0px, transparent 50%) #1d1b1b;
+}
+
+@utility text-balance {
+  text-wrap: balance;
 }
 
 *{
@@ -42,6 +79,14 @@
     --input: #282828;
     --ring: #0a950c;
     --radius: 0.5rem;
+    --sidebar-background: #121212;
+    --sidebar-foreground: #ffffff;
+    --sidebar-primary: #0a950c;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #282828;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #575757;
+    --sidebar-ring: #0a950c;
     
   }
   
