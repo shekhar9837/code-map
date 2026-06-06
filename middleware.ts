@@ -1,13 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from './utils/supabase/middleware'
 
-// Next.js 16: Middleware is now called Proxy
-// This function runs before a request is completed and can modify the response
-export async function proxy(request: NextRequest) {
+// Cloudflare supports Edge middleware, but not Next.js Node proxy middleware.
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
-  
-  // Skip proxy for API routes and Next.js internal routes
-  // This is more efficient than running on every request
+
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
@@ -17,23 +14,21 @@ export async function proxy(request: NextRequest) {
   ) {
     return NextResponse.next({ request })
   }
-  
-  // Early return for root path to ensure it's always accessible
+
   if (pathname === '/' || pathname === '') {
     try {
       const response = await updateSession(request)
       return response || NextResponse.next({ request })
-    } catch (error) {
-      // Even if Supabase fails, allow root path to load
+    } catch {
       return NextResponse.next({ request })
     }
   }
-  
+
   try {
     const response = await updateSession(request)
     return response || NextResponse.next({ request })
   } catch (error) {
-    console.error('Proxy execution error:', {
+    console.error('Middleware execution error:', {
       message: error instanceof Error ? error.message : String(error),
       path: pathname,
     })
@@ -49,4 +44,3 @@ export const config = {
     '**/node_modules/has-symbols/**',
   ],
 }
-
