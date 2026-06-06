@@ -50,12 +50,13 @@
     "zod": "3.24.2"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "0.5.16",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/node": "20.17.30",
     "@types/react": "18",
     "@types/react-dom": "18",
     "@types/react-syntax-highlighter": "15.5.13",
     "autoprefixer": "10.4.22",
+    "baseline-browser-mapping": "^2.10.34",
     "eslint": "9.39.1",
     "eslint-config-next": "16.0.5",
     "postcss": "8",
