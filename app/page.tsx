@@ -1,32 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Book, Box, Github, Youtube } from "lucide-react";
-import RoadmapView from "@/components/ui/roadmap-view";
-import axios from "axios";
-import { StepCard } from "@/components/ui/step-card";
-import { ArrowUp, Square, X, ArrowLeft } from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 import {
   PromptInput,
   PromptInputAction,
   PromptInputActions,
   PromptInputTextarea,
 } from "@/components/ui/prompt-input";
-import Navbar from "@/components/Navbar";
 import LoadingView from "@/components/LoadingView";
 import toast from "react-hot-toast";
-import { RoadmapData, Step } from "@/lib/types";
-import { extractLinks } from "@/lib/helper";
 import { useAuth } from "@/hooks/useAuth";
-import YoutubeVideoCard from "@/components/YoutubeVideoCard";
-import BlogsCard from "@/components/BlogsCard";
-import GithubCard from "@/components/GithubCard";
-import RoadmapCard from "@/components/RoadmapCard";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -38,27 +25,8 @@ export default function Home() {
     "Next.js",
   ]);
 
-  const [resources, setResources] = useState<RoadmapData | string>("");
-  const [youtubeLinks, setYoutubeLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
-  const [githubLinks, setGithubLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [blogsLinks, setBlogsLinks] = useState<Array<{ url: string; thumbnail: string }>>([]);
-
   const { loading, user } = useAuth();
   const router = useRouter();
-
-  // Process the resources when they change
-  useEffect(() => {
-    async function processLinks() {
-      const { youtubeLinks, githubLinks } = await extractLinks(resources);
-      setYoutubeLinks(youtubeLinks);
-      setGithubLinks(githubLinks);
-    }
-
-    if (resources) {
-      processLinks();
-    }
-  }, [resources]);
 
   async function fetchResources(topic: string) {
     // Check if topic is provided
@@ -81,30 +49,9 @@ export default function Home() {
     }
 
     setIsLoading(true);
-    setIsSearching(true);
-    setResources("");
 
     try {
       const response = await axios.post("/api/fetchResources", { topic });
-
-      setBlogsLinks(response.data.resources.blogs || []);
-
-
-      // Format the data to match our expected structure
-      let result;
-      if (response.data && response.data.roadmap) {
-        // Handle the case where data is returned with a 'roadmap' key
-        result = {
-          steps: response.data.roadmap.steps,
-          resources: response.data.resources // Pass along the additional resources if present
-        };
-      } else {
-        // Handle direct data format
-        result = response.data;
-      }
-
-      // Set resources
-      setResources(result);
 
       // Update recent topics
       setRecentTopics((prev) => {
@@ -115,6 +62,9 @@ export default function Home() {
 
       // Dispatch event to update sidebar
       window.dispatchEvent(new Event('historyUpdated'));
+
+      // Redirect to roadmap page
+      router.push(`/roadmap/${encodeURIComponent(topic)}`);
       
     } catch (error) {
       console.error("Error fetching resources:", error);
@@ -126,12 +76,8 @@ export default function Home() {
 
       // Show error toast
       toast.error(errorMessage);
-
-      // Set error in resources state
-      setResources("");
     } finally {
       setIsLoading(false);
-      setIsSearching(false);
     }
   }
 
@@ -139,12 +85,10 @@ export default function Home() {
 
 
   return (
-    // <div className="w-full">
     <main className="home-page">
       {isLoading ? (
         <LoadingView />
-      ) : !resources ? (
-        // Show PromptInput only when there's no data
+      ) : (
         <div className="home-hero">
           <h2 className="home-title">
             What tech skill do you <br />want to learn?
@@ -176,7 +120,7 @@ export default function Home() {
             </PromptInputActions>
           </PromptInput>
 
-          {/* <div className="home-popular">
+          <div className="home-popular">
             <span className="text-sm  font-light text-slate-300">Popular searches: </span>
             {recentTopics.map((t) => (
               <Badge
@@ -191,54 +135,9 @@ export default function Home() {
                 {t}
               </Badge>
             ))}
-          </div> */}
-        </div>
-      ) : (
-        // Show content when data is available
-        <div className="container mx-auto">
-          {/* Add a back button to return to search */}
-          <Button
-            variant="ghost"
-            className="mb-6"
-            onClick={() => {
-              setResources("");
-              setTopic("");
-            }}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to search
-          </Button>
-
-          <div className="space-y-8">
-            {/* YouTube section */}
-            <YoutubeVideoCard
-              isLoading={isLoading}
-              youtubeLinks={youtubeLinks}
-            />
-            {/* Blogs section */}
-            <BlogsCard
-              isLoading={isLoading}
-              blogsLinks={blogsLinks}
-            />
-
-            {/* GitHub section */}
-            <GithubCard
-              isLoading={isLoading}
-              githubLinks={githubLinks}
-            />
-
-            {/* Roadmap card */}
-            <RoadmapCard
-              topic={topic}
-              youtubeLinks={youtubeLinks}
-              githubLinks={githubLinks}
-              resources={resources}
-            />
           </div>
-        </div>)}
-
-
+        </div>
+      )}
     </main>
-    // </div>
   );
 }
